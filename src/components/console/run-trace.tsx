@@ -12,8 +12,8 @@ export function RunTrace({ run }: { run: PipelineRun | null }) {
       <Alert>
         <AlertTitle>No run yet</AlertTitle>
         <AlertDescription>
-          Scan a file from the website intake, or generate an AI red-team attack. The
-          trace lands here as the metric and description the site would show.
+          Scan a file from the website, or generate an attack in the lab. The
+          score, description, and Nemo action land here as the site metric.
         </AlertDescription>
       </Alert>
     );

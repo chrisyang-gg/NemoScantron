@@ -38,7 +38,7 @@ export function ScanPanel({
   async function onFile(file: File | undefined) {
     if (!file) return;
     if (file.size > 200_000) {
-      setLocalError("Keep sample files under 200 KB for this bench.");
+      setLocalError("Keep sample files under 200 KB.");
       return;
     }
     const text = await file.text();
@@ -59,10 +59,10 @@ export function ScanPanel({
   return (
     <div className="space-y-4">
       <div>
-        <h3 className="font-heading text-base">Website intake</h3>
         <p className="text-sm text-muted-foreground">
-          Person A owns this box. Drop an email, CSV, or claim file plus the question you
-          want Nemotron to answer. Sanitizing runs before anything else.
+          Drop an email, CSV, or claim file and the question you want answered.
+          Sanitizing runs first. The verdict comes back on this page as a risk
+          score and a short description.
         </p>
       </div>
 

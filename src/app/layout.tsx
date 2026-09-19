@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { SiteHeader } from "@/components/site/header";
+import { SiteFooter } from "@/components/site/footer";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -14,9 +16,12 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "NemoScantron",
+  title: {
+    default: "NemoScantron",
+    template: "%s · NemoScantron",
+  },
   description:
-    "Fraud scan bench: sanitize website intake, reason with Nemotron, dispatch with Nemo, train the ruleset from red-team misses.",
+    "Website for payment-file fraud scans. Sanitize intake, reason with Nemotron, dispatch with Nemo, and write the metric back onto the page.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
@@ -26,7 +31,11 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       className={`${geistSans.variable} ${geistMono.variable} dark h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-background text-foreground">
-        <TooltipProvider>{children}</TooltipProvider>
+        <TooltipProvider>
+          <SiteHeader />
+          <main className="flex flex-1 flex-col">{children}</main>
+          <SiteFooter />
+        </TooltipProvider>
       </body>
     </html>
   );
