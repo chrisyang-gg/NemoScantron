@@ -142,7 +142,14 @@ export function Fraudometer({
 
 function polar(cx: number, cy: number, r: number, deg: number) {
   const rad = (deg * Math.PI) / 180;
-  return { x: cx + r * Math.cos(rad), y: cy - r * Math.sin(rad) };
+  return {
+    x: roundSvgCoordinate(cx + r * Math.cos(rad)),
+    y: roundSvgCoordinate(cy - r * Math.sin(rad)),
+  };
+}
+
+function roundSvgCoordinate(value: number) {
+  return Number(value.toFixed(6));
 }
 
 /** Trace left→right through the top (rainbow). Avoids SVG sweep flipping the arch. */
