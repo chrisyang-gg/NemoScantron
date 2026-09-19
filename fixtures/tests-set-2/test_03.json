@@ -1,0 +1,115 @@
+{
+  "transaction_id": "txn_test_003",
+  "timestamp": "2026-09-19T16:05:44Z",
+  "amount": 312.0,
+  "currency": "USD",
+  "transaction_type": "purchase",
+  "channel": "card_not_present",
+  "entry_mode": "online_keyed",
+  "card": {
+    "card_id_token": "card_tok_t003",
+    "bin": "377400",
+    "last_four": "3041",
+    "network": "American Express",
+    "card_type": "credit",
+    "product_tier": "platinum",
+    "issuing_bank": "American Express",
+    "expiration_month": 3,
+    "expiration_year": 2029,
+    "card_present": false,
+    "card_activated_days_ago": 1892,
+    "is_virtual_card": false
+  },
+  "account": {
+    "account_id_token": "acct_tok_t003",
+    "account_open_date": "2020-11-03",
+    "credit_limit": 20000.0,
+    "available_credit": 17440.0,
+    "current_balance": 2560.0,
+    "account_status": "active",
+    "billing_zip": "10001",
+    "billing_country": "US",
+    "risk_tier": "low"
+  },
+  "merchant": {
+    "merchant_id_token": "merch_tok_t003",
+    "merchant_name": "IndiaElectro Pvt Ltd",
+    "mcc_code": "5732",
+    "merchant_category": "Electronics Stores",
+    "merchant_city": "Mumbai",
+    "merchant_country": "IN",
+    "acquirer_id_token": "acq_tok_22",
+    "merchant_risk_score": 0.58,
+    "is_first_time_merchant_for_cardholder": true
+  },
+  "location": {
+    "transaction_city": "Mumbai",
+    "transaction_country": "IN",
+    "latitude": 19.076,
+    "longitude": 72.8777,
+    "distance_from_home_km": 12553.0,
+    "distance_from_last_transaction_km": 12553.0,
+    "time_since_last_transaction_minutes": 22,
+    "ip_address_hash": "7b1e...90fa",
+    "ip_country": "PK",
+    "device_id_token": "dev_tok_t003_unknown",
+    "device_type": "desktop",
+    "is_known_device_for_account": false
+  },
+  "authentication": {
+    "cvv_result": "match",
+    "avs_result": "no_match",
+    "pin_verified": false,
+    "three_ds_authenticated": false,
+    "otp_verified": false,
+    "biometric_verified": false
+  },
+  "velocity_features": {
+    "transactions_last_1h": 2,
+    "transactions_last_24h": 4,
+    "amount_sum_last_24h": 798.5,
+    "distinct_merchants_last_24h": 3,
+    "distinct_countries_last_24h": 2,
+    "avg_transaction_amount_90d": 210.3,
+    "std_transaction_amount_90d": 118.6,
+    "declined_attempts_last_1h": 0
+  },
+  "processing": {
+    "authorization_code_token": "auth_tok_t003",
+    "response_code": "declined_suspected_fraud",
+    "processor": "Amex Network",
+    "processing_time_ms": 198,
+    "network_transaction_id_token": "netx_tok_t003"
+  },
+  "risk_assessment": {
+    "model_risk_score": 0.96,
+    "rules_triggered": [
+      "GEO-001",
+      "GEO-002",
+      "GEO-003",
+      "GEO-004",
+      "GEO-006",
+      "MA-001",
+      "MA-002",
+      "MA-007",
+      "VB-008"
+    ],
+    "decision": "decline",
+    "analyst_reviewed": true,
+    "analyst_decision": "confirmed_fraud"
+  },
+  "label": {
+    "is_fraud": true,
+    "fraud_type": "stolen_card",
+    "confirmed_by": "red_team",
+    "chargeback_filed": false
+  },
+  "source": "red_team_synthetic",
+  "red_team_metadata": {
+    "synthetic_id": "rt_0302",
+    "round_number": 2,
+    "attack_type": "geo_impossible_travel",
+    "difficulty": "medium",
+    "red_team_reasoning": "Transaction placed 22 minutes after a legitimate New York authorization, implying a travel speed of roughly 34,000 km/h. IP routed through Pakistan rather than India to add a second country mismatch. AVS intentionally unmatched to compound the score, but amount kept below $500 to avoid a hard issuer hold on foreign high-value transactions."
+  }
+}

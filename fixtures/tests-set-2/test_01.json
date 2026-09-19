@@ -1,0 +1,100 @@
+{
+  "transaction_id": "txn_test_001",
+  "timestamp": "2026-09-19T09:14:33Z",
+  "amount": 87.49,
+  "currency": "USD",
+  "transaction_type": "purchase",
+  "channel": "online",
+  "entry_mode": "online_keyed",
+  "card": {
+    "card_id_token": "card_tok_t001",
+    "bin": "411111",
+    "last_four": "1111",
+    "network": "Visa",
+    "card_type": "credit",
+    "product_tier": "rewards",
+    "issuing_bank": "Chase",
+    "expiration_month": 8,
+    "expiration_year": 2028,
+    "card_present": false,
+    "card_activated_days_ago": 847,
+    "is_virtual_card": false
+  },
+  "account": {
+    "account_id_token": "acct_tok_t001",
+    "account_open_date": "2022-01-15",
+    "credit_limit": 10000.0,
+    "available_credit": 8241.63,
+    "current_balance": 1758.37,
+    "account_status": "active",
+    "billing_zip": "90210",
+    "billing_country": "US",
+    "risk_tier": "low"
+  },
+  "merchant": {
+    "merchant_id_token": "merch_tok_t001",
+    "merchant_name": "Amazon.com",
+    "mcc_code": "5964",
+    "merchant_category": "Direct Marketing \u2014 Catalog Merchants",
+    "merchant_city": "Seattle",
+    "merchant_state": "WA",
+    "merchant_country": "US",
+    "acquirer_id_token": "acq_tok_01",
+    "merchant_risk_score": 0.03,
+    "is_first_time_merchant_for_cardholder": false
+  },
+  "location": {
+    "transaction_city": "Seattle",
+    "transaction_state": "WA",
+    "transaction_country": "US",
+    "latitude": 47.6062,
+    "longitude": -122.3321,
+    "distance_from_home_km": 0.0,
+    "distance_from_last_transaction_km": 0.0,
+    "time_since_last_transaction_minutes": 2880,
+    "ip_address_hash": "3f8a...b12c",
+    "ip_country": "US",
+    "device_id_token": "dev_tok_t001_mobile",
+    "device_type": "mobile",
+    "is_known_device_for_account": true
+  },
+  "authentication": {
+    "cvv_result": "match",
+    "avs_result": "full_match",
+    "pin_verified": false,
+    "three_ds_authenticated": true,
+    "otp_verified": false,
+    "biometric_verified": true
+  },
+  "velocity_features": {
+    "transactions_last_1h": 1,
+    "transactions_last_24h": 2,
+    "amount_sum_last_24h": 121.48,
+    "distinct_merchants_last_24h": 2,
+    "distinct_countries_last_24h": 1,
+    "avg_transaction_amount_90d": 74.2,
+    "std_transaction_amount_90d": 41.8,
+    "declined_attempts_last_1h": 0
+  },
+  "processing": {
+    "authorization_code_token": "auth_tok_t001",
+    "response_code": "approved",
+    "processor": "Visa Net",
+    "processing_time_ms": 312,
+    "network_transaction_id_token": "netx_tok_t001"
+  },
+  "risk_assessment": {
+    "model_risk_score": 0.04,
+    "rules_triggered": [],
+    "decision": "approve",
+    "analyst_reviewed": false,
+    "analyst_decision": null
+  },
+  "label": {
+    "is_fraud": false,
+    "fraud_type": null,
+    "confirmed_by": "none",
+    "chargeback_filed": false
+  },
+  "source": "real"
+}

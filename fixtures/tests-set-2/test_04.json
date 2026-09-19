@@ -1,0 +1,115 @@
+{
+  "transaction_id": "txn_test_004",
+  "timestamp": "2026-09-19T03:22:08Z",
+  "amount": 1480.0,
+  "currency": "USD",
+  "transaction_type": "purchase",
+  "channel": "online",
+  "entry_mode": "online_keyed",
+  "card": {
+    "card_id_token": "card_tok_t004",
+    "bin": "545301",
+    "last_four": "7762",
+    "network": "Mastercard",
+    "card_type": "credit",
+    "product_tier": "signature",
+    "issuing_bank": "Capital One",
+    "expiration_month": 11,
+    "expiration_year": 2028,
+    "card_present": false,
+    "card_activated_days_ago": 547,
+    "is_virtual_card": false
+  },
+  "account": {
+    "account_id_token": "acct_tok_t004",
+    "account_open_date": "2021-08-14",
+    "credit_limit": 15000.0,
+    "available_credit": 12300.0,
+    "current_balance": 2700.0,
+    "account_status": "active",
+    "billing_zip": "77001",
+    "billing_country": "US",
+    "risk_tier": "low"
+  },
+  "merchant": {
+    "merchant_id_token": "merch_tok_t004",
+    "merchant_name": "LuxuryWatch Direct",
+    "mcc_code": "5094",
+    "merchant_category": "Jewelry, Watches and Silverware",
+    "merchant_city": "Miami",
+    "merchant_state": "FL",
+    "merchant_country": "US",
+    "acquirer_id_token": "acq_tok_14",
+    "merchant_risk_score": 0.38,
+    "is_first_time_merchant_for_cardholder": true
+  },
+  "location": {
+    "transaction_city": "Miami",
+    "transaction_state": "FL",
+    "transaction_country": "US",
+    "latitude": 25.7617,
+    "longitude": -80.1918,
+    "distance_from_home_km": 1540.0,
+    "distance_from_last_transaction_km": 1540.0,
+    "time_since_last_transaction_minutes": 360,
+    "ip_address_hash": "0d4a...f99c",
+    "ip_country": "RU",
+    "device_id_token": "dev_tok_t004_new_xff",
+    "device_type": "desktop",
+    "is_known_device_for_account": false
+  },
+  "authentication": {
+    "cvv_result": "match",
+    "avs_result": "no_match",
+    "pin_verified": false,
+    "three_ds_authenticated": false,
+    "otp_verified": false,
+    "biometric_verified": false
+  },
+  "velocity_features": {
+    "transactions_last_1h": 2,
+    "transactions_last_24h": 3,
+    "amount_sum_last_24h": 1530.0,
+    "distinct_merchants_last_24h": 2,
+    "distinct_countries_last_24h": 1,
+    "avg_transaction_amount_90d": 112.4,
+    "std_transaction_amount_90d": 68.2,
+    "declined_attempts_last_1h": 1
+  },
+  "processing": {
+    "authorization_code_token": "auth_tok_t004",
+    "response_code": "approved",
+    "processor": "Mastercard Banknet",
+    "processing_time_ms": 421,
+    "network_transaction_id_token": "netx_tok_t004"
+  },
+  "risk_assessment": {
+    "model_risk_score": 0.87,
+    "rules_triggered": [
+      "GEO-003",
+      "GEO-006",
+      "MA-002",
+      "MA-007",
+      "MA-008",
+      "VB-002",
+      "VB-005"
+    ],
+    "decision": "hold",
+    "analyst_reviewed": false,
+    "analyst_decision": null
+  },
+  "label": {
+    "is_fraud": true,
+    "fraud_type": "account_takeover",
+    "confirmed_by": "red_team",
+    "chargeback_filed": false
+  },
+  "source": "red_team_synthetic",
+  "red_team_metadata": {
+    "synthetic_id": "rt_0401",
+    "round_number": 3,
+    "attack_type": "account_takeover",
+    "difficulty": "hard",
+    "red_team_reasoning": "CVV was matched (obtained via phishing) to avoid the MA-005 signal. Amount $1,480 exceeds 13x the 90-day average but was chosen to stay below the issuer's $2,000 online-single-transaction alert. IP routed through a Russian exit node. AVS mismatch is unavoidable without the billing zip; the hard signals here are device and IP anomaly, not authentication."
+  }
+}

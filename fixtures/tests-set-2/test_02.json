@@ -1,0 +1,110 @@
+{
+  "transaction_id": "txn_test_002",
+  "timestamp": "2026-09-19T02:47:11Z",
+  "amount": 1.0,
+  "currency": "USD",
+  "transaction_type": "purchase",
+  "channel": "online",
+  "entry_mode": "online_keyed",
+  "card": {
+    "card_id_token": "card_tok_t002",
+    "bin": "554433",
+    "last_four": "8821",
+    "network": "Mastercard",
+    "card_type": "credit",
+    "product_tier": "standard",
+    "issuing_bank": "Bank of America",
+    "expiration_month": 6,
+    "expiration_year": 2027,
+    "card_present": false,
+    "card_activated_days_ago": 1240,
+    "is_virtual_card": false
+  },
+  "account": {
+    "account_id_token": "acct_tok_t002",
+    "account_open_date": "2021-05-10",
+    "credit_limit": 5000.0,
+    "available_credit": 4878.0,
+    "current_balance": 122.0,
+    "account_status": "active",
+    "billing_zip": "30301",
+    "billing_country": "US",
+    "risk_tier": "low"
+  },
+  "merchant": {
+    "merchant_id_token": "merch_tok_t002",
+    "merchant_name": "StreamVerify Micro Services",
+    "mcc_code": "7372",
+    "merchant_category": "Prepackaged Software",
+    "merchant_city": "Wilmington",
+    "merchant_state": "DE",
+    "merchant_country": "US",
+    "acquirer_id_token": "acq_tok_09",
+    "merchant_risk_score": 0.47,
+    "is_first_time_merchant_for_cardholder": true
+  },
+  "location": {
+    "transaction_country": "US",
+    "distance_from_home_km": 1204.3,
+    "distance_from_last_transaction_km": 0.0,
+    "time_since_last_transaction_minutes": 4,
+    "ip_address_hash": "9c2f...44ae",
+    "ip_country": "US",
+    "device_id_token": "dev_tok_t002_unknown",
+    "device_type": "desktop",
+    "is_known_device_for_account": false
+  },
+  "authentication": {
+    "cvv_result": "not_provided",
+    "avs_result": "not_checked",
+    "pin_verified": false,
+    "three_ds_authenticated": false,
+    "otp_verified": false,
+    "biometric_verified": false
+  },
+  "velocity_features": {
+    "transactions_last_1h": 9,
+    "transactions_last_24h": 9,
+    "amount_sum_last_24h": 9.0,
+    "distinct_merchants_last_24h": 7,
+    "distinct_countries_last_24h": 1,
+    "avg_transaction_amount_90d": 88.5,
+    "std_transaction_amount_90d": 52.1,
+    "declined_attempts_last_1h": 5
+  },
+  "processing": {
+    "authorization_code_token": "auth_tok_t002",
+    "response_code": "approved",
+    "processor": "Mastercard Banknet",
+    "processing_time_ms": 244,
+    "network_transaction_id_token": "netx_tok_t002"
+  },
+  "risk_assessment": {
+    "model_risk_score": 0.93,
+    "rules_triggered": [
+      "VB-001",
+      "VB-004",
+      "VB-005",
+      "MA-002",
+      "MA-006",
+      "GEO-006"
+    ],
+    "decision": "decline",
+    "analyst_reviewed": true,
+    "analyst_decision": "confirmed_fraud"
+  },
+  "label": {
+    "is_fraud": true,
+    "fraud_type": "card_testing",
+    "confirmed_by": "red_team",
+    "chargeback_filed": false
+  },
+  "source": "red_team_synthetic",
+  "red_team_metadata": {
+    "synthetic_id": "rt_0201",
+    "round_number": 2,
+    "attack_type": "card_testing",
+    "difficulty": "medium",
+    "red_team_reasoning": "Nine $1 probes across seven merchants within the hour, all under the $5 micro-transaction threshold, with CVV withheld to avoid a hard mismatch decline. Five prior declines indicate the card number was tested on other platforms first."
+  }
+}
