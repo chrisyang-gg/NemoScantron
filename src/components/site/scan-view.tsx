@@ -111,14 +111,14 @@ export function ScanView() {
             <button
               type="button"
               onClick={clearAll}
-              className="h-11 rounded-xl bg-red-600 text-sm font-medium text-white shadow-[0_0_24px_rgba(220,38,38,0.35)] transition hover:bg-red-500"
+              className="h-11 rounded-xl bg-[#6e4a4a] text-sm font-medium text-[#f0d6d4] transition hover:bg-[#7d5555]"
             >
               Clear
             </button>
             <button
               type="button"
               onClick={modify}
-              className="h-11 rounded-xl bg-sky-300 text-sm font-medium text-slate-900 shadow-[0_0_24px_rgba(125,211,252,0.35)] transition hover:bg-sky-200"
+              className="h-11 rounded-xl bg-[#4a5c68] text-sm font-medium text-[#d8e2e8] transition hover:bg-[#556875]"
             >
               Modify
             </button>

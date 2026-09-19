@@ -58,7 +58,7 @@ export function Composer({
   return (
     <form
       className={cn(
-        "relative w-full overflow-hidden rounded-2xl border bg-[#140c22]/80 shadow-[0_0_0_1px_rgba(167,139,250,0.12),0_24px_80px_rgba(76,29,149,0.25)] backdrop-blur-md transition-all duration-700",
+        "relative flex w-full flex-col overflow-hidden rounded-2xl border bg-[#140c22]/80 shadow-[0_0_0_1px_rgba(167,139,250,0.12),0_24px_80px_rgba(76,29,149,0.25)] backdrop-blur-md transition-all duration-700",
         dragging && !locked && "border-violet-400/70 shadow-[0_0_40px_rgba(167,139,250,0.35)]",
         locked
           ? "border-violet-950/80 opacity-55"
@@ -86,7 +86,7 @@ export function Composer({
         disabled={locked || busy}
         rows={7}
         placeholder="Paste a note about the charges, or drop a .json history…"
-        className="min-h-[168px] w-full resize-none bg-transparent px-5 pt-4 pb-16 text-[15px] leading-relaxed text-violet-50 placeholder:text-violet-300/35 outline-none disabled:cursor-not-allowed"
+        className="min-h-[168px] w-full resize-none bg-transparent px-5 pt-4 pb-3 text-[15px] leading-relaxed text-violet-50 placeholder:text-violet-300/35 outline-none disabled:cursor-not-allowed"
         onKeyDown={(event) => {
           if ((event.metaKey || event.ctrlKey) && event.key === "Enter" && !locked && !busy) {
             event.preventDefault();
@@ -101,13 +101,13 @@ export function Composer({
         </div>
       ) : null}
 
-      <div className="absolute inset-x-0 bottom-0 flex items-center justify-between px-3 py-3">
+      <div className="flex items-center justify-between px-3 pb-3">
         <div className="flex min-w-0 items-center gap-2">
           <button
             type="button"
             disabled={locked || busy}
             onClick={() => inputRef.current?.click()}
-            className="flex size-10 items-center justify-center rounded-xl border border-violet-400/25 bg-violet-500/10 text-violet-100 transition hover:bg-violet-500/20 disabled:pointer-events-none"
+            className="flex size-10 items-center justify-center rounded-xl border border-violet-400/20 bg-[#2a2038] text-violet-200/80 transition hover:bg-[#342848] disabled:pointer-events-none"
             aria-label="Upload JSON file"
           >
             <FileJson className="size-4" />
@@ -152,7 +152,7 @@ export function Composer({
           <button
             type="submit"
             disabled={busy}
-            className="flex size-10 items-center justify-center rounded-xl bg-violet-400 text-violet-950 shadow-[0_0_24px_rgba(167,139,250,0.45)] transition hover:bg-violet-300 disabled:opacity-60"
+            className="flex size-10 items-center justify-center rounded-xl bg-[#6b5b7a] text-[#efe8f4] transition hover:bg-[#7a6a89] disabled:opacity-60"
             aria-label="Submit"
           >
             {busy ? (
@@ -165,7 +165,7 @@ export function Composer({
       </div>
 
       {error ? (
-        <p className="border-t border-red-400/20 bg-red-950/40 px-4 py-2 text-xs text-red-200">
+        <p className="border-t border-[#6e4a4a]/50 bg-[#3a2428]/70 px-4 py-3 text-sm leading-relaxed text-[#e8cfcb]">
           {error}
         </p>
       ) : null}

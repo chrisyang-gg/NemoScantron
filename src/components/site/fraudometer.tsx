@@ -1,14 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import {
-  GAUGE_BANDS,
-  GAUGE_COLORS,
-  clampScore,
-  colorFor,
-  labelFor,
-  scoreToAngle,
-} from "@/lib/gauge";
+import { clampScore, colorFor, labelFor, scoreToAngle } from "@/lib/gauge";
 
 export function Fraudometer({
   score,
@@ -64,43 +57,31 @@ export function Fraudometer({
   const nx = cx + needle * Math.cos(angle);
   const ny = cy - needle * Math.sin(angle);
   const accent = colorFor(shown);
-  const safeEnd = 180 - 180 * (GAUGE_BANDS.safeMax / 100);
-  const maybeEnd = 180 - 180 * (GAUGE_BANDS.maybeMax / 100);
 
   return (
     <div className="flex flex-col items-center">
       <svg
         viewBox="0 0 320 210"
-        className="w-full max-w-[420px] drop-shadow-[0_0_28px_rgba(167,139,250,0.18)]"
+        className="w-full max-w-[420px]"
         role="img"
         aria-label={`Fraud risk ${shown} percent, ${labelFor(shown)}`}
       >
         <path
           d={arc(cx, cy, r, 180, 0)}
           fill="none"
-          stroke={GAUGE_COLORS.track}
-          strokeWidth="7"
-        />
-        <path
-          d={arc(cx, cy, r, 180, safeEnd)}
-          fill="none"
-          stroke={GAUGE_COLORS.safe}
-          strokeWidth="7"
+          stroke="rgba(196, 181, 253, 0.18)"
+          strokeWidth="6"
           strokeLinecap="round"
         />
-        <path
-          d={arc(cx, cy, r, safeEnd, maybeEnd)}
-          fill="none"
-          stroke={GAUGE_COLORS.maybe}
-          strokeWidth="7"
-        />
-        <path
-          d={arc(cx, cy, r, maybeEnd, 0)}
-          fill="none"
-          stroke={GAUGE_COLORS.unsafe}
-          strokeWidth="7"
-          strokeLinecap="round"
-        />
+        {shown > 0 ? (
+          <path
+            d={arc(cx, cy, r, 180, scoreToAngle(shown))}
+            fill="none"
+            stroke={accent}
+            strokeWidth="6"
+            strokeLinecap="round"
+          />
+        ) : null}
         <line
           x1={cx}
           y1={cy}
