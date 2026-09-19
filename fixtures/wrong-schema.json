@@ -1,0 +1,12 @@
+{
+  "employee_id": "emp_4412",
+  "full_name": "Jordan Hale",
+  "department": "Facilities",
+  "shift": "night",
+  "badge_code": "X-99-A",
+  "emergency_contact": {
+    "name": "Sam Hale",
+    "phone": "412-555-0199"
+  },
+  "notes": "This record is an HR badge file, not a credit card transaction."
+}
