@@ -78,12 +78,15 @@ export function Fraudometer({
           stroke={GAUGE_COLORS.safe}
           strokeWidth="6"
           strokeLinecap="round"
+          strokeLinejoin="round"
         />
         <path
           d={uprightArc(cx, cy, r, safeEnd, maybeEnd)}
           fill="none"
           stroke={GAUGE_COLORS.maybe}
           strokeWidth="6"
+          strokeLinecap="round"
+          strokeLinejoin="round"
         />
         <path
           d={uprightArc(cx, cy, r, maybeEnd, 0)}
@@ -91,6 +94,7 @@ export function Fraudometer({
           stroke={GAUGE_COLORS.unsafe}
           strokeWidth="6"
           strokeLinecap="round"
+          strokeLinejoin="round"
         />
         <line
           x1={cx}
@@ -141,31 +145,16 @@ function polar(cx: number, cy: number, r: number, deg: number) {
   return { x: cx + r * Math.cos(rad), y: cy - r * Math.sin(rad) };
 }
 
-/** Semicircle segments that bulge upward (rainbow), never below the pivot. */
+/** Trace left→right through the top (rainbow). Avoids SVG sweep flipping the arch. */
 function uprightArc(cx: number, cy: number, r: number, fromDeg: number, toDeg: number) {
-  const start = polar(cx, cy, r, fromDeg);
-  const end = polar(cx, cy, r, toDeg);
-  const large = Math.abs(fromDeg - toDeg) > 180 ? 1 : 0;
-  const mid0 = svgArcMidY(start, end, r, 0);
-  const mid1 = svgArcMidY(start, end, r, 1);
-  const sweep = mid0 < mid1 ? 0 : 1;
-  return `M ${start.x} ${start.y} A ${r} ${r} 0 ${large} ${sweep} ${end.x} ${end.y}`;
-}
-
-function svgArcMidY(
-  start: { x: number; y: number },
-  end: { x: number; y: number },
-  r: number,
-  sweep: 0 | 1,
-): number {
-  const my = (start.y + end.y) / 2;
-  const dx = end.x - start.x;
-  const dy = end.y - start.y;
-  const chord = Math.hypot(dx, dy) || 1;
-  const h = Math.sqrt(Math.max(0, r * r - (chord / 2) ** 2));
-  const ny = dx / chord;
-  const sign = sweep === 1 ? 1 : -1;
-  return my + sign * h * ny;
+  const steps = 24;
+  const parts: string[] = [];
+  for (let i = 0; i <= steps; i++) {
+    const deg = fromDeg + ((toDeg - fromDeg) * i) / steps;
+    const point = polar(cx, cy, r, deg);
+    parts.push(`${i === 0 ? "M" : "L"} ${point.x} ${point.y}`);
+  }
+  return parts.join(" ");
 }
 
 function sample(frames: { t: number; v: number }[], elapsed: number) {
