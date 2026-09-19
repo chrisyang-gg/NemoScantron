@@ -21,7 +21,7 @@ export const metadata: Metadata = {
     template: "%s · NemoScantron",
   },
   description:
-    "Website for payment-file fraud scans. Sanitize intake, reason with Nemotron, dispatch with Nemo, and write the metric back onto the page.",
+    "Website for scoring transaction history. Upload a file or describe the payments; get a risk score and the reasoning behind it.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

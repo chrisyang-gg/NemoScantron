@@ -44,6 +44,7 @@ export function resetStore(): Store {
 export function snapshot(): ConsoleState {
   const store = getStore();
   const runs = store.runs;
+  const publicRuns = runs.filter((run) => run.input.source === "website");
   const ai = aiStatus();
   return {
     workflow: store.workflow,
@@ -53,10 +54,10 @@ export function snapshot(): ConsoleState {
     generatedAttacks: store.generatedAttacks,
     ai: { live: ai.live, label: ai.label },
     stats: {
-      scanned: runs.length,
-      fraud: runs.filter((r) => r.reasoning.verdict === "fraud").length,
-      suspicious: runs.filter((r) => r.reasoning.verdict === "suspicious").length,
-      clear: runs.filter((r) => r.reasoning.verdict === "clear").length,
+      scanned: publicRuns.length,
+      fraud: publicRuns.filter((r) => r.reasoning.verdict === "fraud").length,
+      suspicious: publicRuns.filter((r) => r.reasoning.verdict === "suspicious").length,
+      clear: publicRuns.filter((r) => r.reasoning.verdict === "clear").length,
       pendingFeedback: store.proposals.filter((p) => p.status === "pending").length,
     },
   };

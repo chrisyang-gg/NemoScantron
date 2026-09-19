@@ -7,8 +7,7 @@ export function SiteFooter() {
         <div>
           <p className="font-heading">NemoScantron</p>
           <p className="mt-2 text-sm text-muted-foreground">
-            A website for payment files. Sanitize, reason with Nemotron, dispatch
-            with Nemo, and write the metric back onto the page.
+            Score a transaction history. See the risk number and how it was drawn.
           </p>
         </div>
         <div className="text-sm">
@@ -18,7 +17,7 @@ export function SiteFooter() {
           <ul className="mt-2 space-y-1">
             <li>
               <Link href="/scan" className="hover:underline">
-                Scan a file
+                Scan history
               </Link>
             </li>
             <li>
@@ -26,18 +25,13 @@ export function SiteFooter() {
                 How it works
               </Link>
             </li>
-            <li>
-              <Link href="/lab" className="hover:underline">
-                Red-team lab
-              </Link>
-            </li>
           </ul>
         </div>
         <div className="text-sm text-muted-foreground">
-          <p className="text-xs tracking-wide uppercase">Team</p>
+          <p className="text-xs tracking-wide uppercase">Developers</p>
           <p className="mt-2">
-            Intake owns this website. Policy owns Nemotron and the AI feedback
-            loop. Execution owns the AI red team and Nemo dispatch.
+            New suspicious trends are trained offline with{" "}
+            <code>npm run train-trends</code>. That is not a page on this website.
           </p>
         </div>
       </div>

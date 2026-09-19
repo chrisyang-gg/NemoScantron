@@ -12,7 +12,7 @@ export async function POST(request: Request) {
   const rawText = body.rawText?.trim() ?? "";
   if (!rawText) {
     return Response.json(
-      { error: "Paste a file body or drop a text file before scanning." },
+      { error: "Upload a transaction history or describe it in text." },
       { status: 400 },
     );
   }

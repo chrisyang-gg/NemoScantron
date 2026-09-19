@@ -4,22 +4,23 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Loader2, Upload } from "lucide-react";
 
-const SAMPLE = {
-  filename: "vendor-change.eml",
-  prompt: "AP forwarded this from a long-time vendor. Pay it?",
-  rawText: `From: billing@acmepayments.co
-Subject: Updated banking — pay invoice 8891 today
-
-Hi, we changed banks. Do not use the old account.
-Please wire $41,200 immediately to the new account on file.
-
-Keep this confidential — our controller is traveling and asked
-me to handle it personally. Gift card option if wire is too slow.
+const SAMPLE_FILE = {
+  filename: "transactions.csv",
+  rawText: `date,amount,payee,memo
+2026-09-12,184500.00,Harborline Treasury,CEO asked for a wire immediately
+2026-09-12,184500.00,Harborline Treasury,new account — do not use the old
+2026-09-13,250.00,Office coffee,routine
+2026-09-14,41200.00,Acme Payments,keep this confidential gift card backup
 `,
 };
+
+const SAMPLE_TEXT = `Over nine days AP sent a $184,500 wire that the CEO demanded immediately, then a second payment to a new Harborline account with instructions not to use the old one. A $41,200 vendor payout followed with a note to keep it confidential and a gift card backup if the wire was slow.`;
+
+const DEFAULT_PROMPT = "Score this transaction history for fraud risk.";
 
 export function ScanPanel({
   busy,
@@ -30,7 +31,7 @@ export function ScanPanel({
   error: string | null;
   onScan: (payload: { prompt: string; rawText: string; filename?: string }) => void;
 }) {
-  const [prompt, setPrompt] = useState("Is this a legitimate payment request?");
+  const [mode, setMode] = useState("file");
   const [rawText, setRawText] = useState("");
   const [filename, setFilename] = useState<string | undefined>();
   const [localError, setLocalError] = useState<string | null>(null);
@@ -38,7 +39,7 @@ export function ScanPanel({
   async function onFile(file: File | undefined) {
     if (!file) return;
     if (file.size > 200_000) {
-      setLocalError("Keep sample files under 200 KB.");
+      setLocalError("Keep history files under 200 KB.");
       return;
     }
     const text = await file.text();
@@ -49,42 +50,46 @@ export function ScanPanel({
 
   function submit() {
     if (!rawText.trim()) {
-      setLocalError("Paste a body or drop a text file.");
+      setLocalError(
+        mode === "file"
+          ? "Upload a transaction history file, or load the sample."
+          : "Describe the transaction history first.",
+      );
       return;
     }
     setLocalError(null);
-    onScan({ prompt, rawText, filename });
+    onScan({
+      prompt: DEFAULT_PROMPT,
+      rawText,
+      filename: filename ?? (mode === "text" ? "described-history.txt" : "transactions.txt"),
+    });
   }
 
   return (
     <div className="space-y-4">
-      <div>
-        <p className="text-sm text-muted-foreground">
-          Drop an email, CSV, or claim file and the question you want answered.
-          Sanitizing runs first. The verdict comes back on this page as a risk
-          score and a short description.
-        </p>
-      </div>
-
-      <div className="grid gap-4 md:grid-cols-2">
-        <div className="space-y-2">
-          <Label htmlFor="prompt">Analyst prompt</Label>
-          <Textarea
-            id="prompt"
-            value={prompt}
-            onChange={(e) => setPrompt(e.target.value)}
-            rows={3}
-            placeholder="What should Nemotron decide?"
-          />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="file">File (optional)</Label>
+      <Tabs
+        value={mode}
+        onValueChange={(value) => {
+          if (typeof value === "string") {
+            setMode(value);
+            setLocalError(null);
+          }
+        }}
+      >
+        <TabsList variant="line">
+          <TabsTrigger value="file">Upload a file</TabsTrigger>
+          <TabsTrigger value="text">Describe in text</TabsTrigger>
+        </TabsList>
+        <TabsContent value="file" className="space-y-3 pt-4">
+          <Label htmlFor="file">Transaction history file</Label>
           <label
             htmlFor="file"
-            className="flex h-[76px] cursor-pointer items-center gap-3 rounded-lg border border-dashed border-input px-3 text-sm text-muted-foreground hover:bg-muted/40"
+            className="flex min-h-20 cursor-pointer items-center gap-3 rounded-lg border border-dashed border-input px-3 py-3 text-sm text-muted-foreground hover:bg-muted/40"
           >
-            <Upload className="size-4" />
-            <span>{filename ?? "Drop .txt, .csv, .eml, .json"}</span>
+            <Upload className="size-4 shrink-0" />
+            <span>
+              {filename ?? "CSV, TXT, JSON, or EML of the payment history"}
+            </span>
           </label>
           <input
             id="file"
@@ -93,23 +98,26 @@ export function ScanPanel({
             accept=".txt,.csv,.eml,.json,.md"
             onChange={(e) => onFile(e.target.files?.[0])}
           />
-        </div>
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="body">File body</Label>
-        <Textarea
-          id="body"
-          value={rawText}
-          onChange={(e) => {
-            setRawText(e.target.value);
-            if (!filename) setFilename("pasted.txt");
-          }}
-          rows={10}
-          className="font-mono text-xs md:text-xs"
-          placeholder="Paste the email, invoice, or transaction dump here."
-        />
-      </div>
+          {rawText && mode === "file" ? (
+            <pre className="max-h-48 overflow-auto rounded-lg bg-muted/40 p-2 font-mono text-[11px] whitespace-pre-wrap">
+              {rawText}
+            </pre>
+          ) : null}
+        </TabsContent>
+        <TabsContent value="text" className="space-y-3 pt-4">
+          <Label htmlFor="body">Describe the transaction history</Label>
+          <Textarea
+            id="body"
+            value={rawText}
+            onChange={(e) => {
+              setRawText(e.target.value);
+              setFilename("described-history.txt");
+            }}
+            rows={12}
+            placeholder="In your own words: who paid whom, amounts, dates, and anything that felt off."
+          />
+        </TabsContent>
+      </Tabs>
 
       {(localError || error) && (
         <Alert variant="destructive">
@@ -121,19 +129,23 @@ export function ScanPanel({
       <div className="flex flex-wrap gap-2">
         <Button onClick={submit} disabled={busy}>
           {busy ? <Loader2 className="animate-spin" /> : null}
-          Sanitize and scan
+          Get risk score
         </Button>
         <Button
           variant="outline"
           disabled={busy}
           onClick={() => {
-            setPrompt(SAMPLE.prompt);
-            setRawText(SAMPLE.rawText);
-            setFilename(SAMPLE.filename);
+            if (mode === "file") {
+              setRawText(SAMPLE_FILE.rawText);
+              setFilename(SAMPLE_FILE.filename);
+            } else {
+              setRawText(SAMPLE_TEXT);
+              setFilename("described-history.txt");
+            }
             setLocalError(null);
           }}
         >
-          Load a sample claim
+          Load a sample
         </Button>
       </div>
     </div>

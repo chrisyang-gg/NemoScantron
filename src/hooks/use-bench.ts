@@ -1,15 +1,14 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import type { AttackFamilyCard } from "@/components/console/red-team-panel";
 import type { ConsoleState, PipelineRun } from "@/lib/pipeline/types";
 
-export type BenchState = ConsoleState & { attackFamilies: AttackFamilyCard[] };
+export type BenchState = ConsoleState;
 
 export function useBench(initial: BenchState) {
   const [state, setState] = useState<BenchState>(initial);
   const [activeRun, setActiveRun] = useState<PipelineRun | null>(
-    initial.runs[0] ?? null,
+    initial.runs.find((run) => run.input.source === "website") ?? null,
   );
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -22,56 +21,32 @@ export function useBench(initial: BenchState) {
     return payload;
   }, []);
 
-  async function mutate(url: string, body: unknown) {
+  async function scan(payload: {
+    prompt: string;
+    rawText: string;
+    filename?: string;
+  }) {
     setBusy(true);
     setError(null);
     try {
-      const response = await fetch(url, {
+      const response = await fetch("/api/scan", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
+        body: JSON.stringify(payload),
       });
-      const payload = (await response.json()) as {
+      const body = (await response.json()) as {
         error?: string;
         run?: PipelineRun;
       };
-      if (!response.ok) throw new Error(payload.error || "Request failed.");
-      const next = await refresh();
-      if (payload.run) setActiveRun(payload.run);
-      else setActiveRun(next.runs[0] ?? null);
+      if (!response.ok) throw new Error(body.error || "Scan failed.");
+      await refresh();
+      if (body.run) setActiveRun(body.run);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Request failed.");
+      setError(err instanceof Error ? err.message : "Scan failed.");
     } finally {
       setBusy(false);
     }
   }
 
-  return {
-    state,
-    activeRun,
-    setActiveRun,
-    busy,
-    error,
-    scan: (payload: { prompt: string; rawText: string; filename?: string }) =>
-      mutate("/api/scan", payload),
-    generate: (payload: { family: string; brief: string }) =>
-      mutate("/api/red-team", payload),
-    replay: (id: string) => mutate("/api/red-team", { replayId: id }),
-    decide: (id: string, status: "accepted" | "rejected") =>
-      mutate("/api/feedback", { id, status }),
-    async reset() {
-      setBusy(true);
-      setError(null);
-      try {
-        const response = await fetch("/api/rules?reset=1", { method: "POST" });
-        if (!response.ok) throw new Error("Reset failed.");
-        const payload = await refresh();
-        setActiveRun(payload.runs[0] ?? null);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Reset failed.");
-      } finally {
-        setBusy(false);
-      }
-    },
-  };
+  return { state, activeRun, setActiveRun, busy, error, scan };
 }

@@ -10,7 +10,6 @@ import { cn } from "@/lib/utils";
 const LINKS = [
   { href: "/scan", label: "Scan" },
   { href: "/how-it-works", label: "How it works" },
-  { href: "/lab", label: "Lab" },
 ];
 
 export function SiteHeader() {
@@ -23,7 +22,7 @@ export function SiteHeader() {
         <Link href="/" className="flex items-baseline gap-2">
           <span className="font-heading text-base tracking-tight">NemoScantron</span>
           <span className="hidden text-xs text-muted-foreground sm:inline">
-            fraud scan
+            risk score
           </span>
         </Link>
 
@@ -41,7 +40,7 @@ export function SiteHeader() {
             </Link>
           ))}
           <Link href="/scan" className={cn(buttonVariants(), "ml-2")}>
-            Submit a file
+            Scan history
           </Link>
         </nav>
 
@@ -77,7 +76,7 @@ export function SiteHeader() {
               onClick={() => setOpen(false)}
               className={cn(buttonVariants(), "mt-2 justify-center")}
             >
-              Submit a file
+              Scan history
             </Link>
           </div>
         </nav>

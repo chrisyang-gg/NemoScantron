@@ -1,32 +1,31 @@
 import Link from "next/link";
 import { buttonVariants } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
 const STEPS = [
   {
-    title: "This website",
-    detail: "You drop a file and a question. That is the only intake the model sees.",
+    title: "File or text",
+    detail: "Upload a transaction history, or describe the payments in your own words.",
   },
   {
     title: "Sanitize",
-    detail: "HTML, PAN, and injection phrases come off before policy runs.",
+    detail: "HTML, card numbers, and injection phrases come off before scoring.",
   },
   {
     title: "Policy pack",
-    detail: "Rules, policies, and the Nemo dispatch workflow sit in one place.",
+    detail: "The history is matched against the live ruleset and workflow.",
   },
   {
     title: "Nemotron",
-    detail: "A verdict, a risk score, and a short description — the site metric.",
+    detail: "A risk score and a written account of how that score was drawn.",
   },
   {
-    title: "Nemo",
-    detail: "Hold funds, page an analyst, or close the case.",
+    title: "On this page",
+    detail: "The conclusion comes back here — not a buried log.",
   },
   {
-    title: "AI loop",
-    detail: "The red-team agent writes fake fraud. The feedback agent trains the pack.",
+    title: "Developer training",
+    detail: "An AI red team introduces new suspicious trends offline. Not a public page.",
   },
 ];
 
@@ -44,16 +43,15 @@ export function HomePage({
               NemoScantron
             </p>
             <h1 className="mt-3 font-heading text-4xl tracking-tight text-balance md:text-5xl">
-              Read the payment file on the website, before money moves.
+              Score a transaction history before the next payment goes out.
             </h1>
             <p className="mt-4 max-w-xl text-base text-muted-foreground md:text-lg">
-              Submit an email, invoice, or payroll dump. We sanitize it, score it
-              against policy, let Nemotron reason, and Nemo writes a risk score and a
-              short description back onto this site.
+              Upload the file or type what happened. NemoScantron returns a risk
+              score and the reasoning behind it.
             </p>
             <div className="mt-6 flex flex-wrap gap-2">
               <Link href="/scan" className={cn(buttonVariants({ size: "lg" }))}>
-                Submit a file
+                Scan history
               </Link>
               <Link
                 href="/how-it-works"
@@ -64,7 +62,7 @@ export function HomePage({
             </div>
           </div>
           <div className="grid grid-cols-2 gap-2 self-start">
-            <StatCard label="Files scanned" value={stats.scanned} />
+            <StatCard label="Histories scored" value={stats.scanned} />
             <StatCard label="Fraud" value={stats.fraud} tone="fraud" />
             <StatCard label="Suspicious" value={stats.suspicious} tone="suspicious" />
             <StatCard label="Clear" value={stats.clear} tone="clear" />
@@ -74,9 +72,9 @@ export function HomePage({
 
       <section className="mx-auto w-full max-w-6xl px-4 py-14 md:px-6">
         <p className="text-xs tracking-wide text-muted-foreground uppercase">
-          What the site does
+          On the website
         </p>
-        <h2 className="mt-2 font-heading text-2xl">From the form to the metric</h2>
+        <h2 className="mt-2 font-heading text-2xl">History in, score and rationale out</h2>
         <ol className="mt-6 grid gap-3 md:grid-cols-3">
           {STEPS.map((step, index) => (
             <li key={step.title} className="rounded-2xl border bg-card p-4">
@@ -88,39 +86,6 @@ export function HomePage({
             </li>
           ))}
         </ol>
-      </section>
-
-      <section className="border-y border-border bg-card/40">
-        <div className="mx-auto grid w-full max-w-6xl gap-8 px-4 py-14 md:grid-cols-2 md:px-6">
-          <div>
-            <Badge variant="outline">Website intake</Badge>
-            <h2 className="mt-3 font-heading text-2xl">
-              Files and a prompt. That is the product.
-            </h2>
-            <p className="mt-3 text-sm text-muted-foreground">
-              Accounts payable drops a vendor email. You ask whether to pay. The
-              page comes back with a verdict, a risk score, and the Nemo action —
-              hold, notify, or close — not a buried log file.
-            </p>
-            <Link href="/scan" className={cn(buttonVariants(), "mt-4 inline-flex")}>
-              Open the scan page
-            </Link>
-          </div>
-          <div>
-            <Badge variant="outline">Lab</Badge>
-            <h2 className="mt-3 font-heading text-2xl">
-              An AI red team lives on the same site.
-            </h2>
-            <p className="mt-3 text-sm text-muted-foreground">
-              The lab agent reads the live ruleset and writes fake fraud. When
-              Nemotron misses, the feedback agent proposes a rule. Accept it, replay
-              the attack, and the website metric should flip to fraud.
-            </p>
-            <Link href="/lab" className={cn(buttonVariants({ variant: "outline" }), "mt-4 inline-flex")}>
-              Open the lab
-            </Link>
-          </div>
-        </div>
       </section>
     </div>
   );

@@ -7,7 +7,7 @@ const STAGES = [
   {
     id: "input",
     title: "Website / User input",
-    detail: "Files and prompt",
+    detail: "File or text history",
     lane: "A · Intake",
     className: "border-zinc-400/70 bg-zinc-500/10",
   },
@@ -21,7 +21,7 @@ const STAGES = [
   {
     id: "red-team",
     title: "AI red team",
-    detail: "Generates fake fraud",
+    detail: "Developer trend training",
     lane: "C · Execution",
     className: "border-red-500/80 bg-red-500/10",
   },
@@ -79,9 +79,9 @@ export function PipelineMap({ run }: { run: PipelineRun | null }) {
           <h2 className="font-heading text-lg">How a case moves through NemoScantron</h2>
         </div>
         <p className="max-w-md text-xs text-muted-foreground">
-          Website intake and the AI red team both hit the same policy pack. Nemotron
-          reasons, Nemo dispatches, metrics return to the site. An AI feedback agent
-          trains the ruleset when the adversary finds a miss.
+          The website scores a transaction history. Developers train new
+          suspicious trends with an AI red team off this site. Nemotron explains
+          the score on the scan page.
         </p>
       </div>
 
@@ -109,9 +109,10 @@ export function PipelineMap({ run }: { run: PipelineRun | null }) {
           className="md:col-span-2 md:col-start-1"
         />
         <p className="flex items-center text-xs text-muted-foreground md:col-span-4">
-          Output returns to the website as a risk score, a short description, and the
-          Nemo actions. When the AI red team disagrees with Nemotron, the feedback
-          agent writes a proposed rule instead of failing silently.
+          Output on the website is a risk score and the reasoning behind it.
+          Developers introduce new suspicious trends with{" "}
+          <code>npm run train-trends</code>; that training never appears as a
+          public page.
         </p>
       </div>
     </div>
