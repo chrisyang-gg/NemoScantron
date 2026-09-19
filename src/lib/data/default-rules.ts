@@ -3,14 +3,14 @@ import type { Rule, WorkflowPack } from "@/lib/pipeline/types";
 export const defaultWorkflow: WorkflowPack = {
   name: "Nemo fraud dispatch",
   description:
-    "Sanitize intake, score against the policy pack, reason with Nemotron, then let Nemo dispatch hold / notify / close.",
+    "Sanitize intake, score against the policy pack, reason with Nemotron, then let Nemo dispatch hold / notify / close. An AI red team writes fake fraud; an AI feedback agent trains the ruleset from misses.",
   steps: [
-    "Sanitize website or red-team payload",
+    "Sanitize website or AI red-team payload",
     "Evaluate ruleset, policies, and this workflow description",
     "Nemotron reasoning over evidence",
     "Nemo dispatches execution actions",
     "Write metrics back to the website",
-    "Open a reason-based feedback proposal when red team finds a miss",
+    "AI feedback proposes a rule when the adversary and Nemotron disagree",
   ],
 };
 

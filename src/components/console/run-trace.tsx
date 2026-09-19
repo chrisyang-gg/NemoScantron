@@ -12,8 +12,8 @@ export function RunTrace({ run }: { run: PipelineRun | null }) {
       <Alert>
         <AlertTitle>No run yet</AlertTitle>
         <AlertDescription>
-          Scan a file from the website intake, or inject a red-team event. The trace
-          lands here as the metric and description the site would show.
+          Scan a file from the website intake, or generate an AI red-team attack. The
+          trace lands here as the metric and description the site would show.
         </AlertDescription>
       </Alert>
     );
@@ -37,6 +37,19 @@ export function RunTrace({ run }: { run: PipelineRun | null }) {
         <Stat label="Rule hits" value={String(run.metrics.ruleHits)} />
         <Stat label="Latency" value={`${run.metrics.latencyMs} ms`} />
       </div>
+
+      {run.input.redTeam ? (
+        <section className="space-y-1 rounded-lg border border-red-500/30 bg-red-500/5 p-3">
+          <h4 className="text-xs tracking-wide text-muted-foreground uppercase">
+            AI red team
+          </h4>
+          <p className="text-sm font-medium">{run.input.redTeam.name}</p>
+          <p className="text-sm text-muted-foreground">{run.input.redTeam.attackPlan}</p>
+          <p className="font-mono text-[11px] text-muted-foreground">
+            {run.input.redTeam.engine}
+          </p>
+        </section>
+      ) : null}
 
       <section className="space-y-2">
         <h4 className="text-xs tracking-wide text-muted-foreground uppercase">

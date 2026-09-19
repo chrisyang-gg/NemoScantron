@@ -20,8 +20,8 @@ const STAGES = [
   },
   {
     id: "red-team",
-    title: "Red team / fake fraud",
-    detail: "Synthetic events",
+    title: "AI red team",
+    detail: "Generates fake fraud",
     lane: "C · Execution",
     className: "border-red-500/80 bg-red-500/10",
   },
@@ -48,8 +48,8 @@ const STAGES = [
   },
   {
     id: "feedback",
-    title: "Feedback loop",
-    detail: "Train rules from misses",
+    title: "AI feedback loop",
+    detail: "Reasons over misses",
     lane: "B · Policy",
     className: "border-violet-400/80 bg-violet-500/10",
   },
@@ -79,8 +79,9 @@ export function PipelineMap({ run }: { run: PipelineRun | null }) {
           <h2 className="font-heading text-lg">How a case moves through NemoScantron</h2>
         </div>
         <p className="max-w-md text-xs text-muted-foreground">
-          Website intake and red-team events both hit the same policy pack. Nemotron
-          reasons, Nemo dispatches, metrics return to the site, misses train the ruleset.
+          Website intake and the AI red team both hit the same policy pack. Nemotron
+          reasons, Nemo dispatches, metrics return to the site. An AI feedback agent
+          trains the ruleset when the adversary finds a miss.
         </p>
       </div>
 
@@ -109,8 +110,8 @@ export function PipelineMap({ run }: { run: PipelineRun | null }) {
         />
         <p className="flex items-center text-xs text-muted-foreground md:col-span-4">
           Output returns to the website as a risk score, a short description, and the
-          Nemo actions. Red-team misses open a reason-based proposal instead of silently
-          failing.
+          Nemo actions. When the AI red team disagrees with Nemotron, the feedback
+          agent writes a proposed rule instead of failing silently.
         </p>
       </div>
     </div>

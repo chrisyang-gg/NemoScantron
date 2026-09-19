@@ -1,7 +1,9 @@
 import { defaultRules, defaultWorkflow } from "@/lib/data/default-rules";
+import { aiStatus } from "@/lib/ai/engine";
 import type {
   ConsoleState,
   FeedbackProposal,
+  GeneratedAttack,
   PipelineRun,
   Rule,
   WorkflowPack,
@@ -12,6 +14,7 @@ type Store = {
   rules: Rule[];
   runs: PipelineRun[];
   proposals: FeedbackProposal[];
+  generatedAttacks: GeneratedAttack[];
 };
 
 const globalForStore = globalThis as unknown as { __nemoscantron?: Store };
@@ -22,6 +25,7 @@ function createStore(): Store {
     rules: structuredClone(defaultRules),
     runs: [],
     proposals: [],
+    generatedAttacks: [],
   };
 }
 
@@ -40,11 +44,14 @@ export function resetStore(): Store {
 export function snapshot(): ConsoleState {
   const store = getStore();
   const runs = store.runs;
+  const ai = aiStatus();
   return {
     workflow: store.workflow,
     rules: store.rules,
     runs,
     proposals: store.proposals,
+    generatedAttacks: store.generatedAttacks,
+    ai: { live: ai.live, label: ai.label },
     stats: {
       scanned: runs.length,
       fraud: runs.filter((r) => r.reasoning.verdict === "fraud").length,
@@ -62,6 +69,14 @@ export function addRun(run: PipelineRun) {
 export function addProposals(proposals: FeedbackProposal[]) {
   if (!proposals.length) return;
   getStore().proposals = [...proposals, ...getStore().proposals];
+}
+
+export function addGeneratedAttack(event: GeneratedAttack) {
+  getStore().generatedAttacks = [event, ...getStore().generatedAttacks].slice(0, 20);
+}
+
+export function getGeneratedAttack(id: string): GeneratedAttack | undefined {
+  return getStore().generatedAttacks.find((event) => event.id === id);
 }
 
 export function upsertRule(rule: Rule) {

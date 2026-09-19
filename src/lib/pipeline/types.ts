@@ -19,6 +19,12 @@ export type ScanInput = {
   rawText: string;
   expectedVerdict?: Verdict;
   createdAt: string;
+  redTeam?: {
+    family: string;
+    name: string;
+    attackPlan: string;
+    engine: string;
+  };
 };
 
 export type SanitizedInput = {
@@ -76,6 +82,23 @@ export type FeedbackProposal = {
   reason: string;
   proposedRule: Rule;
   status: ProposalStatus;
+  engine: string;
+  missKind: "false-negative" | "false-positive";
+  steps: ReasoningStep[];
+};
+
+export type GeneratedAttack = {
+  id: string;
+  family: string;
+  name: string;
+  expectedVerdict: Verdict;
+  filename: string;
+  prompt: string;
+  body: string;
+  attackPlan: string;
+  evadeNotes: string[];
+  engine: string;
+  createdAt: string;
 };
 
 export type PipelineRun = {
@@ -104,6 +127,11 @@ export type ConsoleState = {
   rules: Rule[];
   runs: PipelineRun[];
   proposals: FeedbackProposal[];
+  generatedAttacks: GeneratedAttack[];
+  ai: {
+    live: boolean;
+    label: string;
+  };
   stats: {
     scanned: number;
     fraud: number;

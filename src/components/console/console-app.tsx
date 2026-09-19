@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { PipelineMap } from "@/components/console/pipeline-map";
 import { ScanPanel } from "@/components/console/scan-panel";
-import { RedTeamPanel, type RedTeamCard } from "@/components/console/red-team-panel";
+import { RedTeamPanel, type AttackFamilyCard } from "@/components/console/red-team-panel";
 import { RulesPanel } from "@/components/console/rules-panel";
 import { FeedbackPanel } from "@/components/console/feedback-panel";
 import { RunTrace } from "@/components/console/run-trace";
@@ -15,7 +15,7 @@ import { TeamBoard } from "@/components/console/team-board";
 import type { ConsoleState, PipelineRun } from "@/lib/pipeline/types";
 import { RotateCcw } from "lucide-react";
 
-export type StatePayload = ConsoleState & { redTeam: RedTeamCard[] };
+export type StatePayload = ConsoleState & { attackFamilies: AttackFamilyCard[] };
 
 export function ConsoleApp({ initial }: { initial: StatePayload }) {
   const [state, setState] = useState<StatePayload>(initial);
@@ -42,8 +42,12 @@ export function ConsoleApp({ initial }: { initial: StatePayload }) {
     await mutate("/api/scan", payload, "scan");
   }
 
-  async function inject(eventId: string) {
-    await mutate("/api/red-team", { eventId }, "red-team");
+  async function generate(payload: { family: string; brief: string }) {
+    await mutate("/api/red-team", payload, "red-team");
+  }
+
+  async function replay(id: string) {
+    await mutate("/api/red-team", { replayId: id }, "red-team");
   }
 
   async function decide(id: string, status: "accepted" | "rejected") {
@@ -102,8 +106,8 @@ export function ConsoleApp({ initial }: { initial: StatePayload }) {
           </h1>
           <p className="mt-1 max-w-xl text-sm text-muted-foreground">
             Sanitize what the website sends, score it against the policy pack, let
-            Nemotron reason, then have Nemo dispatch. Red team events train the
-            ruleset when the bench is wrong.
+            Nemotron reason, then have Nemo dispatch. An AI red team writes fake
+            fraud; an AI feedback loop trains the ruleset when the bench is wrong.
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
@@ -116,6 +120,14 @@ export function ConsoleApp({ initial }: { initial: StatePayload }) {
           />
           <Metric label="Clear" value={state.stats.clear} tone="clear" />
           <Metric label="Feedback" value={state.stats.pendingFeedback} />
+          <div className="rounded-lg border px-2.5 py-1.5">
+            <p className="text-[10px] tracking-wide text-muted-foreground uppercase">
+              AI engine
+            </p>
+            <p className="max-w-[14rem] truncate font-mono text-[11px]">
+              {state.ai.live ? "NVIDIA" : "local"} · {state.ai.label}
+            </p>
+          </div>
           <Button variant="ghost" size="sm" onClick={resetBench} disabled={busy}>
             <RotateCcw />
             Reset bench
@@ -145,10 +157,14 @@ export function ConsoleApp({ initial }: { initial: StatePayload }) {
           </TabsContent>
           <TabsContent value="red-team" className="pt-4">
             <RedTeamPanel
-              events={state.redTeam}
+              families={state.attackFamilies}
+              attacks={state.generatedAttacks}
+              engineLabel={state.ai.label}
+              live={state.ai.live}
               busy={busy}
               error={actionError}
-              onInject={inject}
+              onGenerate={generate}
+              onReplay={replay}
             />
           </TabsContent>
           <TabsContent value="rules" className="pt-4">
@@ -157,6 +173,7 @@ export function ConsoleApp({ initial }: { initial: StatePayload }) {
           <TabsContent value="feedback" className="pt-4">
             <FeedbackPanel
               proposals={state.proposals}
+              engineLabel={state.ai.label}
               busy={busy}
               onDecide={decide}
             />

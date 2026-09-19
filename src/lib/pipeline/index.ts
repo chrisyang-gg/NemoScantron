@@ -1,10 +1,16 @@
-import { proposeFeedback } from "@/lib/pipeline/feedback";
+import { proposeFeedback } from "@/lib/ai/feedback-agent";
 import { dispatchWithNemo } from "@/lib/pipeline/execute";
 import { reasonWithNemotron } from "@/lib/pipeline/reasoning";
 import { matchRules } from "@/lib/pipeline/ruleset";
 import { sanitizeInput } from "@/lib/pipeline/sanitize";
 import { addProposals, addRun, getStore } from "@/lib/pipeline/store";
-import type { PipelineRun, ScanInput, SourceKind, Verdict } from "@/lib/pipeline/types";
+import type {
+  GeneratedAttack,
+  PipelineRun,
+  ScanInput,
+  SourceKind,
+  Verdict,
+} from "@/lib/pipeline/types";
 
 export type RunRequest = {
   source: SourceKind;
@@ -12,9 +18,10 @@ export type RunRequest = {
   rawText: string;
   filename?: string;
   expectedVerdict?: Verdict;
+  redTeam?: ScanInput["redTeam"];
 };
 
-export function runPipeline(request: RunRequest): PipelineRun {
+export async function runPipeline(request: RunRequest): Promise<PipelineRun> {
   const started = Date.now();
   const input: ScanInput = {
     id: `in_${crypto.randomUUID().slice(0, 8)}`,
@@ -24,6 +31,7 @@ export function runPipeline(request: RunRequest): PipelineRun {
     rawText: request.rawText,
     expectedVerdict: request.expectedVerdict,
     createdAt: new Date().toISOString(),
+    redTeam: request.redTeam,
   };
 
   const sanitized = sanitizeInput(input);
@@ -46,8 +54,24 @@ export function runPipeline(request: RunRequest): PipelineRun {
     feedback: [],
   };
 
-  run.feedback = proposeFeedback(run, getStore().rules);
+  run.feedback = await proposeFeedback(run, getStore().rules);
   addRun(run);
   addProposals(run.feedback);
   return run;
+}
+
+export function runRequestFromAttack(event: GeneratedAttack): RunRequest {
+  return {
+    source: "red-team",
+    prompt: event.prompt,
+    rawText: event.body,
+    filename: event.filename,
+    expectedVerdict: event.expectedVerdict,
+    redTeam: {
+      family: event.family,
+      name: event.name,
+      attackPlan: event.attackPlan,
+      engine: event.engine,
+    },
+  };
 }

@@ -1,26 +1,30 @@
-import { runPipeline } from "@/lib/pipeline";
-import { getRedTeamEvent } from "@/lib/pipeline/red-team";
+import { generateRedTeamEvent } from "@/lib/ai/red-team-agent";
+import { runPipeline, runRequestFromAttack } from "@/lib/pipeline";
+import { addGeneratedAttack, getGeneratedAttack, getStore } from "@/lib/pipeline/store";
 
 export const dynamic = "force-dynamic";
 
 export async function POST(request: Request) {
-  const body = (await request.json()) as { eventId?: string };
-  const event = body.eventId ? getRedTeamEvent(body.eventId) : undefined;
+  const body = (await request.json()) as {
+    family?: string;
+    brief?: string;
+    replayId?: string;
+  };
 
-  if (!event) {
-    return Response.json(
-      { error: "Pick a red-team fixture to inject." },
-      { status: 400 },
-    );
+  if (body.replayId) {
+    const event = getGeneratedAttack(body.replayId);
+    if (!event) {
+      return Response.json({ error: "No generated attack with that id to replay." }, { status: 404 });
+    }
+    const run = await runPipeline(runRequestFromAttack(event));
+    return Response.json({ event, run });
   }
 
-  const run = runPipeline({
-    source: "red-team",
-    prompt: event.prompt,
-    rawText: event.body,
-    filename: event.filename,
-    expectedVerdict: event.expectedVerdict,
+  const event = await generateRedTeamEvent(getStore().rules, {
+    family: body.family,
+    brief: body.brief,
   });
-
-  return Response.json({ run });
+  addGeneratedAttack(event);
+  const run = await runPipeline(runRequestFromAttack(event));
+  return Response.json({ event, run });
 }

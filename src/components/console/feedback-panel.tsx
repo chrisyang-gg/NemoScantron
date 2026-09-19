@@ -7,10 +7,12 @@ import type { FeedbackProposal } from "@/lib/pipeline/types";
 
 export function FeedbackPanel({
   proposals,
+  engineLabel,
   busy,
   onDecide,
 }: {
   proposals: FeedbackProposal[];
+  engineLabel: string;
   busy: boolean;
   onDecide: (id: string, status: "accepted" | "rejected") => void;
 }) {
@@ -20,19 +22,21 @@ export function FeedbackPanel({
   return (
     <div className="space-y-4">
       <div>
-        <h3 className="font-heading text-base">Reason-based feedback</h3>
+        <h3 className="font-heading text-base">AI feedback loop</h3>
         <p className="text-sm text-muted-foreground">
-          Person B reviews these. When a red-team fixture is labeled fraud and the bench
-          misses it, Nemotron writes a proposed rule instead of failing silently.
+          Person B reviews these. When the AI red team labels a case differently than
+          Nemotron, this agent writes the miss rationale and a proposed rule. Same
+          Nemotron contract as the adversary.
         </p>
+        <p className="mt-1 font-mono text-[11px] text-muted-foreground">{engineLabel}</p>
       </div>
 
       {pending.length === 0 ? (
         <Alert>
           <AlertTitle>No pending proposals</AlertTitle>
           <AlertDescription>
-            Inject the lookalike-vendor red-team event. That case is built to miss so
-            you can accept a new rule and re-run it.
+            Generate an “Evade the current pack” attack on the Red team tab. If the
+            bench misses it, the feedback agent will land a proposal here.
           </AlertDescription>
         </Alert>
       ) : (
@@ -42,7 +46,24 @@ export function FeedbackPanel({
               key={proposal.id}
               className="space-y-3 rounded-xl border border-violet-400/40 bg-violet-500/10 p-3"
             >
-              <p className="text-sm">{proposal.reason}</p>
+              <div className="flex flex-wrap items-center gap-2">
+                <Badge variant="outline">{proposal.missKind}</Badge>
+                <span className="font-mono text-[11px] text-muted-foreground">
+                  {proposal.engine}
+                </span>
+              </div>
+              {proposal.steps.length ? (
+                <ol className="space-y-1.5">
+                  {proposal.steps.map((step, index) => (
+                    <li key={step.title} className="text-sm">
+                      <span className="font-mono text-muted-foreground">{index + 1}.</span>{" "}
+                      <span className="font-medium">{step.title}.</span> {step.detail}
+                    </li>
+                  ))}
+                </ol>
+              ) : (
+                <p className="text-sm">{proposal.reason}</p>
+              )}
               <div className="rounded-lg bg-background/60 p-2">
                 <p className="font-medium">{proposal.proposedRule.title}</p>
                 <p className="text-sm text-muted-foreground">
@@ -81,7 +102,10 @@ export function FeedbackPanel({
           </p>
           <ul className="space-y-2">
             {done.map((proposal) => (
-              <li key={proposal.id} className="flex items-center justify-between gap-2 text-sm">
+              <li
+                key={proposal.id}
+                className="flex items-center justify-between gap-2 text-sm"
+              >
                 <span>{proposal.proposedRule.title}</span>
                 <Badge variant="secondary">{proposal.status}</Badge>
               </li>

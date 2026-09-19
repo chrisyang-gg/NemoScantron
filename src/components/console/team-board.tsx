@@ -18,13 +18,11 @@ const LANES = [
   {
     person: "Person B",
     role: "Policy",
-    owns: "Ruleset, policies, workflow description, Nemotron reasoning, feedback trainer.",
+    owns: "Ruleset, Nemotron scoring, and the AI feedback agent that trains rules from misses.",
     files: [
       "src/lib/data/default-rules.ts",
-      "src/lib/pipeline/ruleset.ts",
       "src/lib/pipeline/reasoning.ts",
-      "src/lib/pipeline/feedback.ts",
-      "src/components/console/rules-panel.tsx",
+      "src/lib/ai/feedback-agent.ts",
       "src/components/console/feedback-panel.tsx",
     ],
     color: "border-sky-400/50",
@@ -32,12 +30,11 @@ const LANES = [
   {
     person: "Person C",
     role: "Execution",
-    owns: "Red-team fixtures, Nemo dispatcher, execution output, replaying misses.",
+    owns: "AI red team that writes fake fraud, Nemo dispatcher, execution output.",
     files: [
-      "src/lib/data/red-team-events.ts",
-      "src/lib/pipeline/red-team.ts",
+      "src/lib/ai/red-team-agent.ts",
+      "src/lib/data/attack-families.ts",
       "src/lib/pipeline/execute.ts",
-      "src/app/api/red-team/route.ts",
       "src/components/console/red-team-panel.tsx",
     ],
     color: "border-emerald-400/50",
@@ -50,8 +47,9 @@ export function TeamBoard() {
       <div>
         <h3 className="font-heading text-base">Three-person split</h3>
         <p className="text-sm text-muted-foreground">
-          The diagram already has three swimlanes. Keep contracts at the JSON types in{" "}
-          <code>src/lib/pipeline/types.ts</code> and nobody has to wait on a rewrite.
+          Both adversary and trainer are agents behind the same Nemotron JSON contract
+          in <code>src/lib/ai/engine.ts</code>. Types stay in{" "}
+          <code>src/lib/pipeline/types.ts</code>.
         </p>
       </div>
       <div className="grid gap-3 md:grid-cols-3">

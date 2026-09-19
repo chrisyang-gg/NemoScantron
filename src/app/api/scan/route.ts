@@ -17,7 +17,7 @@ export async function POST(request: Request) {
     );
   }
 
-  const run = runPipeline({
+  const run = await runPipeline({
     source: "website",
     prompt: body.prompt ?? "",
     rawText,
