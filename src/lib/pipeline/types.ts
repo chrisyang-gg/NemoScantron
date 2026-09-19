@@ -67,6 +67,17 @@ export type ReasoningResult = {
   summary: string;
   steps: ReasoningStep[];
   matchedRules: RuleHit[];
+  explanation: {
+    headline: string;
+    body: string;
+    findings: {
+      title: string;
+      severity: RuleSeverity;
+      policy: string;
+      evidence: string[];
+      why: string;
+    }[];
+  };
 };
 
 export type ExecutionAction = {

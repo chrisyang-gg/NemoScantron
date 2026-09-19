@@ -1,8 +1,10 @@
 # NemoScantron
 
 A website that scores **transaction history**. Upload a file or describe the
-payments in text. The page returns a **risk score** and a written account of
-**how that score was drawn**.
+payments in text. The dashboard shows a **speedometer** of the risk score in
+the middle of the page, then a written case for **why it is suspected as
+fraud** — each policy hit, the wording that triggered it, and why that pattern
+is treated as hostile.
 
 Red-team work is **not on the website**. Developers introduce new suspicious
 trends with an AI trainer:

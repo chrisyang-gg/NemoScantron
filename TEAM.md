@@ -12,7 +12,8 @@ rationale out.
 | --- | --- |
 | `src/components/site/` | Pages, header, footer |
 | `src/components/console/scan-panel.tsx` | Upload file or describe in text |
-| `src/components/site/risk-report.tsx` | Score + how we reached it |
+| `src/components/site/speedometer.tsx` | Center risk gauge |
+| `src/components/site/fraud-explanation.tsx` | Why it is suspected as fraud |
 | `src/lib/pipeline/sanitize.ts` | Intake cleaning |
 
 ## Person B — Policy
