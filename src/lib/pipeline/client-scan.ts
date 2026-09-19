@@ -2,11 +2,19 @@ import { defaultRules } from "@/lib/data/default-rules";
 import { reasonWithNemotron } from "@/lib/pipeline/reasoning";
 import { matchRules } from "@/lib/pipeline/ruleset";
 import { sanitizeInput } from "@/lib/pipeline/sanitize";
+import {
+  isAllowedJsonMime,
+  isJsonFilename,
+  parseJsonFile,
+  sanitizeCreditCardJson,
+  stringifySanitizedRecords,
+} from "@/lib/pipeline/schema-sanitize";
 import type { ReasoningResult } from "@/lib/pipeline/types";
 
 export type AttachedJson = {
   name: string;
   text: string;
+  mime?: string;
 };
 
 export type ScanRequest = {
@@ -19,6 +27,7 @@ export type ScanSuccess = {
   score: number;
   reasoning: ReasoningResult;
   filename?: string;
+  droppedFields: string[];
 };
 
 export type ScanFailure = {
@@ -63,6 +72,17 @@ export function scoreSubmission(request: ScanRequest): ScanResponse {
   };
 
   const sanitized = sanitizeInput(input);
+  if (validated.droppedFields.length) {
+    sanitized.stripped.push(
+      `${validated.droppedFields.length} extra field(s) not in the credit-card schema`,
+    );
+    sanitized.warnings.push(
+      `Removed fields before scoring: ${validated.droppedFields.slice(0, 8).join(", ")}${
+        validated.droppedFields.length > 8 ? "…" : ""
+      }.`,
+    );
+  }
+
   const hits = matchRules(sanitized.text, defaultRules);
   const reasoning = reasonWithNemotron({ input, sanitized, hits });
 
@@ -72,11 +92,12 @@ export function scoreSubmission(request: ScanRequest): ScanResponse {
     score: reasoning.riskScore,
     reasoning,
     filename: validated.filename,
+    droppedFields: validated.droppedFields,
   };
 }
 
 function validateIntake(request: ScanRequest):
-  | { ok: true; rawText: string; filename?: string }
+  | { ok: true; rawText: string; filename?: string; droppedFields: string[] }
   | ScanFailure {
   const note = request.text.trim();
   const file = request.file;
@@ -88,27 +109,30 @@ function validateIntake(request: ScanRequest):
     };
   }
 
+  let cleaned = "";
+  let droppedFields: string[] = [];
+  let filename: string | undefined;
+
   if (file) {
-    if (!file.name.toLowerCase().endsWith(".json")) {
+    if (!isJsonFilename(file.name)) {
       return { ok: false, error: "Only .json files are accepted." };
     }
-    if (!file.text.trim()) {
-      return { ok: false, error: "That JSON file is empty." };
+    if (!isAllowedJsonMime(file.mime)) {
+      return { ok: false, error: "Only .json files are accepted." };
     }
-    try {
-      JSON.parse(file.text);
-    } catch {
-      return {
-        ok: false,
-        error: "The file is not valid JSON. Fix it, or Clear and try another.",
-      };
-    }
+
+    const parsed = parseJsonFile(file.text);
+    if (!parsed.ok) return parsed;
+
+    const sanitized = sanitizeCreditCardJson(parsed.value);
+    if (!sanitized.ok) return sanitized;
+
+    cleaned = stringifySanitizedRecords(sanitized.records);
+    droppedFields = sanitized.dropped;
+    filename = file.name;
   }
 
-  const rawText = [file ? flattenJson(JSON.parse(file.text)) : "", note]
-    .filter(Boolean)
-    .join("\n\n");
-
+  const rawText = [cleaned, note].filter(Boolean).join("\n\n");
   if (!rawText.trim()) {
     return { ok: false, error: "Nothing to score after reading that input." };
   }
@@ -116,22 +140,7 @@ function validateIntake(request: ScanRequest):
   return {
     ok: true,
     rawText,
-    filename: file?.name,
+    filename,
+    droppedFields,
   };
-}
-
-function flattenJson(value: unknown, depth = 0): string {
-  if (value == null) return "";
-  if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") {
-    return String(value);
-  }
-  if (Array.isArray(value)) {
-    return value.map((item) => flattenJson(item, depth + 1)).join("\n");
-  }
-  if (typeof value === "object") {
-    return Object.entries(value as Record<string, unknown>)
-      .map(([key, item]) => `${key}: ${flattenJson(item, depth + 1)}`)
-      .join("\n");
-  }
-  return "";
 }

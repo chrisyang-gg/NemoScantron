@@ -31,7 +31,20 @@ export function Composer({
 
   async function takeFile(next: File | undefined) {
     if (!next || locked) return;
-    if (!next.name.toLowerCase().endsWith(".json")) {
+    const name = next.name.toLowerCase();
+    const mime = next.type.toLowerCase();
+    if (!name.endsWith(".json")) {
+      onReject("Only .json files are accepted.");
+      return;
+    }
+    if (
+      mime &&
+      mime !== "application/json" &&
+      mime !== "text/json" &&
+      mime !== "application/x-json" &&
+      mime !== "application/octet-stream" &&
+      mime !== "text/plain"
+    ) {
       onReject("Only .json files are accepted.");
       return;
     }
@@ -39,7 +52,7 @@ export function Composer({
       onReject("Keep JSON files under 200 KB.");
       return;
     }
-    onFile({ name: next.name, text: await next.text() });
+    onFile({ name: next.name, text: await next.text(), mime: next.type });
   }
 
   return (

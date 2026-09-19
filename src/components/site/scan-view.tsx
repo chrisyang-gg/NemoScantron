@@ -21,6 +21,7 @@ export function ScanView() {
   const [score, setScore] = useState(0);
   const [ignition, setIgnition] = useState(0);
   const [summary, setSummary] = useState<string | null>(null);
+  const [droppedNote, setDroppedNote] = useState<string | null>(null);
 
   const gaugeVisible = phase !== "compose";
   const locked = phase === "locked";
@@ -36,6 +37,13 @@ export function ScanView() {
     }
     setScore(result.score);
     setSummary(result.reasoning.explanation?.headline ?? result.reasoning.summary);
+    setDroppedNote(
+      result.droppedFields.length
+        ? `Stripped ${result.droppedFields.length} extra field${
+            result.droppedFields.length === 1 ? "" : "s"
+          } before scoring.`
+        : null,
+    );
     setIgnition((value) => value + 1);
     setPhase("locked");
   }
@@ -47,6 +55,7 @@ export function ScanView() {
     setError(null);
     setScore(0);
     setSummary(null);
+    setDroppedNote(null);
     setPhase("compose");
   }
 
@@ -77,6 +86,11 @@ export function ScanView() {
               {summary ? (
                 <p className="mt-1 max-w-md text-center text-sm text-violet-200/70">
                   {summary}
+                </p>
+              ) : null}
+              {droppedNote ? (
+                <p className="mt-2 max-w-md text-center text-xs text-violet-300/55">
+                  {droppedNote}
                 </p>
               ) : null}
             </>

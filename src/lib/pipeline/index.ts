@@ -3,6 +3,12 @@ import { dispatchWithNemo } from "@/lib/pipeline/execute";
 import { reasonWithNemotron } from "@/lib/pipeline/reasoning";
 import { matchRules } from "@/lib/pipeline/ruleset";
 import { sanitizeInput } from "@/lib/pipeline/sanitize";
+import {
+  isJsonFilename,
+  parseJsonFile,
+  sanitizeCreditCardJson,
+  stringifySanitizedRecords,
+} from "@/lib/pipeline/schema-sanitize";
 import { addProposals, addRun, getStore } from "@/lib/pipeline/store";
 import type {
   GeneratedAttack,
@@ -34,7 +40,17 @@ export async function runPipeline(request: RunRequest): Promise<PipelineRun> {
     redTeam: request.redTeam,
   };
 
+  const prepared = prepareJsonAgainstSchema(input.rawText, input.filename);
+  input.rawText = prepared.text;
   const sanitized = sanitizeInput(input);
+  if (prepared.dropped.length) {
+    sanitized.stripped.push(
+      `${prepared.dropped.length} extra field(s) not in the credit-card schema`,
+    );
+    sanitized.warnings.push(
+      `Removed fields before scoring: ${prepared.dropped.slice(0, 8).join(", ")}.`,
+    );
+  }
   const hits = matchRules(sanitized.text, getStore().rules);
   const reasoning = reasonWithNemotron({ input, sanitized, hits });
   const actions = dispatchWithNemo(reasoning, input.source);
@@ -58,6 +74,25 @@ export async function runPipeline(request: RunRequest): Promise<PipelineRun> {
   addRun(run);
   addProposals(run.feedback);
   return run;
+}
+
+function prepareJsonAgainstSchema(
+  rawText: string,
+  filename?: string,
+): { text: string; dropped: string[] } {
+  const looksJson = filename ? isJsonFilename(filename) : rawText.trim().startsWith("{") || rawText.trim().startsWith("[");
+  if (!looksJson) return { text: rawText, dropped: [] };
+
+  const parsed = parseJsonFile(rawText);
+  if (!parsed.ok) return { text: rawText, dropped: [] };
+
+  const sanitized = sanitizeCreditCardJson(parsed.value);
+  if (!sanitized.ok) return { text: rawText, dropped: [] };
+
+  return {
+    text: stringifySanitizedRecords(sanitized.records),
+    dropped: sanitized.dropped,
+  };
 }
 
 export function runRequestFromAttack(event: GeneratedAttack): RunRequest {

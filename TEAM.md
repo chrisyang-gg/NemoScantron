@@ -15,6 +15,8 @@ rationale out.
 | `src/components/site/fraudometer.tsx` | Center risk gauge |
 | `src/lib/gauge.ts` | Green / amber / red cutoffs |
 | `src/lib/pipeline/sanitize.ts` | Intake cleaning |
+| `src/lib/pipeline/schema-sanitize.ts` | JSON type + schema field scrub |
+| `src/lib/data/credit-card-transaction.schema.json` | Allowed transaction fields |
 
 ## Person B — Policy
 

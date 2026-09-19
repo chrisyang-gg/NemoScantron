@@ -7,10 +7,10 @@ the risk.
 GitHub Pages builds on every push to `main`.
 
 ```
-Composer (text + JSON) ──► validate ──► Nemotron score
+.json file ──► type check ──► schema scrub ──► Nemotron score
                                  │
                                  ▼
-                    fraudometer comes online
+                    extra keys dropped; missing keys ok
 ```
 
 ## Run it locally
@@ -22,10 +22,18 @@ npm run dev
 
 Open [http://127.0.0.1:43127](http://127.0.0.1:43127).
 
-## JSON shape
+## JSON intake
 
-Any JSON is accepted. Nested objects are flattened into text the policy pack
-can read. A typical history looks like `fixtures/sample-history.json`.
+Only `.json` files are accepted. Each record is projected onto
+`src/lib/data/credit-card-transaction.schema.json` before it reaches the
+scorer:
+
+- Extra keys (and nested extras) are stripped.
+- Missing fields are allowed. The schema `required` list is not enforced.
+- A file may be one transaction, an array, or `{ "transactions": [...] }`.
+
+`fixtures/sample-history.json` is a partial history plus junk fields that get
+dropped on submit.
 
 ## Gauge bands
 

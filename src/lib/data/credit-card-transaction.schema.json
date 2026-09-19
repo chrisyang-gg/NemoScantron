@@ -1,0 +1,200 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/schemas/credit_card_transaction.schema.json",
+  "title": "CreditCardTransaction",
+  "description": "A single credit card transaction record as it would exist inside an issuer's fraud-detection pipeline. Sensitive fields (full card number, CVV) are intentionally never stored in raw form -- real issuers tokenize or mask them for PCI-DSS compliance, and this schema follows that same practice.",
+  "type": "object",
+  "required": [
+    "transaction_id",
+    "timestamp",
+    "amount",
+    "currency",
+    "transaction_type",
+    "channel",
+    "entry_mode",
+    "card",
+    "account",
+    "merchant",
+    "location",
+    "authentication",
+    "velocity_features",
+    "processing",
+    "risk_assessment",
+    "label",
+    "source"
+  ],
+  "properties": {
+    "transaction_id": {
+      "type": "string",
+      "description": "Unique identifier for this transaction, assigned by the issuer's processing system.",
+      "examples": ["txn_9f3a1c8e2b"]
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "UTC timestamp when the transaction was submitted for authorization."
+    },
+    "amount": {
+      "type": "number",
+      "minimum": 0,
+      "description": "Transaction amount in the given currency's minor-unit-free decimal form (e.g. 42.50 for $42.50)."
+    },
+    "currency": {
+      "type": "string",
+      "pattern": "^[A-Z]{3}$",
+      "description": "ISO 4217 currency code, e.g. USD, EUR, GBP."
+    },
+    "transaction_type": {
+      "type": "string",
+      "enum": ["purchase", "refund", "cash_advance", "atm_withdrawal", "balance_transfer", "recurring_payment", "chargeback"],
+      "description": "The kind of financial event this record represents."
+    },
+    "channel": {
+      "type": "string",
+      "enum": ["card_present", "card_not_present", "online", "mobile_app", "phone_order", "mail_order"],
+      "description": "The context in which the transaction was initiated."
+    },
+    "entry_mode": {
+      "type": "string",
+      "enum": ["chip", "magstripe", "contactless_tap", "manual_key_entry", "online_keyed", "recurring_stored_credential"],
+      "description": "How the card details were captured at the point of sale."
+    },
+    "card": {
+      "type": "object",
+      "description": "Card-level attributes. The full PAN and CVV are never present -- only a network token, the BIN, and the last four digits, matching real-world PCI-DSS practice.",
+      "required": ["card_id_token", "bin", "last_four", "network", "card_type", "expiration_month", "expiration_year", "card_present"],
+      "properties": {
+        "card_id_token": { "type": "string" },
+        "bin": { "type": "string", "pattern": "^[0-9]{6}$" },
+        "last_four": { "type": "string", "pattern": "^[0-9]{4}$" },
+        "network": { "type": "string", "enum": ["Visa", "Mastercard", "American Express", "Discover"] },
+        "card_type": { "type": "string", "enum": ["credit", "debit", "prepaid"] },
+        "product_tier": { "type": "string", "enum": ["standard", "gold", "platinum", "signature", "business", "rewards"] },
+        "issuing_bank": { "type": "string" },
+        "expiration_month": { "type": "integer", "minimum": 1, "maximum": 12 },
+        "expiration_year": { "type": "integer", "minimum": 2000 },
+        "card_present": { "type": "boolean" },
+        "card_activated_days_ago": { "type": "integer", "minimum": 0 },
+        "is_virtual_card": { "type": "boolean" }
+      }
+    },
+    "account": {
+      "type": "object",
+      "description": "Cardholder account context, used to judge whether a transaction is typical for this specific customer.",
+      "required": ["account_id_token", "account_open_date", "credit_limit", "available_credit", "account_status"],
+      "properties": {
+        "account_id_token": { "type": "string" },
+        "account_open_date": { "type": "string", "format": "date" },
+        "credit_limit": { "type": "number", "minimum": 0 },
+        "available_credit": { "type": "number" },
+        "current_balance": { "type": "number" },
+        "account_status": {
+          "type": "string",
+          "enum": ["active", "suspended", "closed", "delinquent"]
+        },
+        "billing_zip": { "type": "string" },
+        "billing_country": { "type": "string", "pattern": "^[A-Z]{2}$" },
+        "risk_tier": { "type": "string", "enum": ["low", "medium", "high"] }
+      }
+    },
+    "merchant": {
+      "type": "object",
+      "description": "Where the money is going.",
+      "required": ["merchant_id_token", "mcc_code", "merchant_category", "merchant_country"],
+      "properties": {
+        "merchant_id_token": { "type": "string" },
+        "merchant_name": { "type": "string" },
+        "mcc_code": { "type": "string", "pattern": "^[0-9]{4}$" },
+        "merchant_category": { "type": "string" },
+        "merchant_city": { "type": "string" },
+        "merchant_state": { "type": "string" },
+        "merchant_country": { "type": "string", "pattern": "^[A-Z]{2}$" },
+        "acquirer_id_token": { "type": "string" },
+        "merchant_risk_score": { "type": "number", "minimum": 0, "maximum": 1 },
+        "is_first_time_merchant_for_cardholder": { "type": "boolean" }
+      }
+    },
+    "location": {
+      "type": "object",
+      "properties": {
+        "transaction_city": { "type": "string" },
+        "transaction_state": { "type": "string" },
+        "transaction_country": { "type": "string", "pattern": "^[A-Z]{2}$" },
+        "latitude": { "type": "number" },
+        "longitude": { "type": "number" },
+        "distance_from_home_km": { "type": "number", "minimum": 0 },
+        "distance_from_last_transaction_km": { "type": "number", "minimum": 0 },
+        "time_since_last_transaction_minutes": { "type": "number", "minimum": 0 },
+        "ip_address_hash": { "type": "string" },
+        "ip_country": { "type": "string", "pattern": "^[A-Z]{2}$" },
+        "device_id_token": { "type": "string" },
+        "device_type": { "type": "string", "enum": ["mobile", "desktop", "tablet", "pos_terminal", "atm"] },
+        "is_known_device_for_account": { "type": "boolean" }
+      }
+    },
+    "authentication": {
+      "type": "object",
+      "properties": {
+        "cvv_result": { "type": "string", "enum": ["match", "no_match", "not_provided"] },
+        "avs_result": { "type": "string", "enum": ["full_match", "partial_match", "no_match", "not_checked"] },
+        "pin_verified": { "type": "boolean" },
+        "three_ds_authenticated": { "type": "boolean" },
+        "otp_verified": { "type": "boolean" },
+        "biometric_verified": { "type": "boolean" }
+      }
+    },
+    "velocity_features": {
+      "type": "object",
+      "properties": {
+        "transactions_last_1h": { "type": "integer", "minimum": 0 },
+        "transactions_last_24h": { "type": "integer", "minimum": 0 },
+        "amount_sum_last_24h": { "type": "number", "minimum": 0 },
+        "distinct_merchants_last_24h": { "type": "integer", "minimum": 0 },
+        "distinct_countries_last_24h": { "type": "integer", "minimum": 0 },
+        "avg_transaction_amount_90d": { "type": "number", "minimum": 0 },
+        "std_transaction_amount_90d": { "type": "number", "minimum": 0 },
+        "declined_attempts_last_1h": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "processing": {
+      "type": "object",
+      "required": ["response_code"],
+      "properties": {
+        "authorization_code_token": { "type": "string" },
+        "response_code": {
+          "type": "string",
+          "enum": ["approved", "declined_insufficient_funds", "declined_suspected_fraud", "declined_invalid_card", "declined_expired_card", "referral"]
+        },
+        "processor": { "type": "string" },
+        "processing_time_ms": { "type": "integer", "minimum": 0 },
+        "network_transaction_id_token": { "type": "string" }
+      }
+    },
+    "risk_assessment": {
+      "type": "object",
+      "required": ["model_risk_score", "decision"],
+      "properties": {
+        "model_risk_score": { "type": "number", "minimum": 0, "maximum": 1 },
+        "rules_triggered": { "type": "array", "items": { "type": "string" } },
+        "decision": { "type": "string", "enum": ["approve", "flag_for_review", "hold", "decline"] },
+        "nemotron_explanation": { "type": "string" },
+        "analyst_reviewed": { "type": "boolean" },
+        "analyst_decision": { "type": ["string", "null"] }
+      }
+    },
+    "label": {
+      "type": "object",
+      "required": ["is_fraud"],
+      "properties": {
+        "is_fraud": { "type": "boolean" },
+        "fraud_type": { "type": ["string", "null"] },
+        "confirmed_by": { "type": "string", "enum": ["analyst", "customer", "red_team", "none"] },
+        "chargeback_filed": { "type": "boolean" }
+      }
+    },
+    "source": {
+      "type": "string",
+      "enum": ["real", "red_team_synthetic"]
+    }
+  }
+}
