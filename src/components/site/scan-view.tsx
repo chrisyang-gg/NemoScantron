@@ -15,6 +15,7 @@ type Phase = "compose" | "locked" | "editing";
 
 export function ScanView() {
   const [phase, setPhase] = useState<Phase>("compose");
+  const [notesKey, setNotesKey] = useState(0);
   const [text, setText] = useState("");
   const [file, setFile] = useState<AttachedJson | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -27,16 +28,17 @@ export function ScanView() {
   const gaugeVisible = phase !== "compose";
   const locked = phase === "locked";
 
-  async function submit() {
+  async function submit(notes: string) {
+    setText(notes);
     setBusy(true);
     setError(null);
-    const result = scoreSubmission({ text, file });
+    const result = scoreSubmission({ text: notes, file });
     if (!result.ok) {
       setBusy(false);
       setError(result.error);
       return;
     }
-    await sendToBackend(buildBackendPayload(text, file));
+    await sendToBackend(buildBackendPayload(notes, file));
     setBusy(false);
     setScore(result.score);
     setSummary(result.reasoning.explanation?.headline ?? result.reasoning.summary);
@@ -59,6 +61,7 @@ export function ScanView() {
     setScore(0);
     setSummary(null);
     setDroppedNote(null);
+    setNotesKey((value) => value + 1);
     setPhase("compose");
   }
 
@@ -72,12 +75,13 @@ export function ScanView() {
     <div className="relative mx-auto flex min-h-[calc(100dvh-3.5rem)] w-full max-w-3xl flex-col px-4 py-6 md:px-6">
       <div
         className={cn(
-          "flex flex-col items-center overflow-hidden transition-all duration-700 ease-in-out",
+          "pointer-events-none flex flex-col items-center overflow-hidden transition-all duration-700 ease-in-out",
           gaugeVisible
             ? "mb-4 max-h-[460px] flex-1 opacity-100"
             : "mb-0 max-h-0 flex-none opacity-0",
         )}
         aria-hidden={!gaugeVisible}
+        inert={!gaugeVisible ? true : undefined}
       >
         <div className="flex flex-1 flex-col items-center justify-center">
           {gaugeVisible ? (
@@ -129,12 +133,12 @@ export function ScanView() {
         ) : null}
 
         <Composer
-          text={text}
+          key={notesKey}
+          initialText={text}
           file={file}
           locked={locked}
           busy={busy}
           error={error}
-          onText={setText}
           onFile={(next) => {
             setFile(next);
             setError(null);

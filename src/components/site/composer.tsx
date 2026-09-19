@@ -1,38 +1,39 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { CornerDownLeft, FileJson, Loader2, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { AttachedJson } from "@/lib/pipeline/client-scan";
 
 export function Composer({
-  text,
+  initialText,
   file,
   locked,
   busy,
   error,
-  onText,
   onFile,
   onReject,
   onSubmit,
 }: {
-  text: string;
+  initialText: string;
   file: AttachedJson | null;
   locked: boolean;
   busy: boolean;
   error: string | null;
-  onText: (value: string) => void;
   onFile: (file: AttachedJson | null) => void;
   onReject: (message: string) => void;
-  onSubmit: () => void;
+  onSubmit: (notes: string) => void;
 }) {
-  const inputRef = useRef<HTMLInputElement>(null);
   const textRef = useRef<HTMLTextAreaElement>(null);
   const [dragging, setDragging] = useState(false);
 
-  useEffect(() => {
+  function notes() {
+    return textRef.current?.value ?? "";
+  }
+
+  function focusNotes() {
     if (!locked) textRef.current?.focus();
-  }, [locked]);
+  }
 
   async function takeFile(next: File | undefined) {
     if (!next || locked) return;
@@ -61,64 +62,76 @@ export function Composer({
   }
 
   return (
-    <form
+    <div
       className={cn(
-        "relative flex w-full flex-col overflow-hidden rounded-2xl border bg-[#140c22]/80 shadow-[0_0_0_1px_rgba(167,139,250,0.12),0_24px_80px_rgba(76,29,149,0.25)] backdrop-blur-md transition-all duration-700",
-        dragging && !locked && "border-violet-400/70 shadow-[0_0_40px_rgba(167,139,250,0.35)]",
-        locked
-          ? "border-violet-950/80 opacity-55"
-          : "border-violet-500/30 hover:border-violet-400/40",
+        "relative z-20 flex w-full flex-col overflow-hidden rounded-2xl border bg-[#140c22] shadow-[0_0_0_1px_rgba(167,139,250,0.12),0_24px_80px_rgba(76,29,149,0.25)]",
+        dragging && !locked && "border-violet-400/70",
+        locked ? "border-violet-950/80 opacity-55" : "border-violet-500/30",
       )}
-      onSubmit={(event) => {
+      onMouseDown={(event) => {
+        const target = event.target as HTMLElement;
+        if (target.closest("button, input, textarea, label, a")) return;
         event.preventDefault();
-        if (!locked && !busy) onSubmit();
-      }}
-      onDragEnter={(event) => {
-        event.preventDefault();
-        if (!locked) setDragging(true);
-      }}
-      onDragOver={(event) => event.preventDefault()}
-      onDragLeave={() => setDragging(false)}
-      onDrop={(event) => {
-        event.preventDefault();
-        setDragging(false);
-        void takeFile(event.dataTransfer.files[0]);
+        focusNotes();
       }}
     >
+      <label htmlFor="composer-notes" className="sr-only">
+        Notes to put on top of the JSON file
+      </label>
       <textarea
+        id="composer-notes"
         ref={textRef}
-        value={text}
-        onChange={(event) => onText(event.target.value)}
-        readOnly={locked}
-        rows={7}
+        name="notes"
+        defaultValue={initialText}
+        autoFocus
+        autoComplete="off"
+        autoCorrect="on"
         spellCheck
-        placeholder="Type notes here. They go on top of the JSON file when you submit."
-        className="min-h-[168px] w-full resize-none bg-[#1c142c] px-5 pt-4 pb-3 text-[15px] leading-relaxed text-violet-50 caret-violet-100 outline-none selection:bg-violet-500/40 placeholder:text-violet-300/40 read-only:cursor-default read-only:text-violet-200/70"
+        rows={8}
+        tabIndex={0}
+        {...(locked ? { readOnly: true } : {})}
+        placeholder="Click here and type. These lines go on top of the JSON file when you submit."
+        className="relative z-20 min-h-[180px] w-full cursor-text resize-none border-0 bg-[#1c142c] px-5 pt-4 pb-3 text-[16px] leading-relaxed text-violet-50 caret-violet-100 outline-none select-text selection:bg-violet-500/40 placeholder:text-violet-200/55"
         onKeyDown={(event) => {
           if ((event.metaKey || event.ctrlKey) && event.key === "Enter" && !locked && !busy) {
             event.preventDefault();
-            onSubmit();
+            onSubmit(notes());
           }
         }}
       />
 
-      {dragging && !locked ? (
-        <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-violet-950/50 text-sm text-violet-100">
-          Drop a .json file
-        </div>
-      ) : null}
-
-      <div className="flex items-center justify-between px-3 pb-3">
+      <div className="relative z-20 flex items-center justify-between px-3 pb-3">
         <div className="flex min-w-0 items-center gap-2">
-          <button
-            type="button"
-            disabled={locked || busy}
-            onClick={() => inputRef.current?.click()}
-            className="flex size-10 items-center justify-center rounded-xl border border-violet-400/20 bg-[#2a2038] text-violet-200/80 transition hover:bg-[#342848] disabled:pointer-events-none"
-            aria-label="Upload JSON file"
+          <label
+            className={cn(
+              "flex size-10 cursor-pointer items-center justify-center rounded-xl border border-violet-400/20 bg-[#2a2038] text-violet-200/80 transition hover:bg-[#342848]",
+              (locked || busy) && "pointer-events-none opacity-50",
+            )}
+            onDragEnter={(event) => {
+              event.preventDefault();
+              if (!locked) setDragging(true);
+            }}
+            onDragOver={(event) => event.preventDefault()}
+            onDragLeave={() => setDragging(false)}
+            onDrop={(event) => {
+              event.preventDefault();
+              setDragging(false);
+              void takeFile(event.dataTransfer.files[0]);
+            }}
           >
             <FileJson className="size-4" />
-          </button>
+            <input
+              type="file"
+              accept=".json,application/json"
+              hidden
+              disabled={locked}
+              onChange={(event) => {
+                void takeFile(event.target.files?.[0]);
+                event.target.value = "";
+              }}
+            />
+            <span className="sr-only">Upload JSON file</span>
+          </label>
           {file ? (
             <span className="flex min-w-0 items-center gap-1.5 rounded-full border border-violet-400/20 bg-violet-500/10 px-2.5 py-1 text-xs text-violet-100">
               <span className="truncate">{file.name}</span>
@@ -135,20 +148,9 @@ export function Composer({
             </span>
           ) : (
             <span className="hidden text-xs text-violet-300/45 sm:inline">
-              .json only
+              {dragging ? "Drop JSON" : ".json only"}
             </span>
           )}
-          <input
-            ref={inputRef}
-            type="file"
-            accept=".json,application/json"
-            className="sr-only"
-            disabled={locked}
-            onChange={(event) => {
-              void takeFile(event.target.files?.[0]);
-              event.target.value = "";
-            }}
-          />
         </div>
 
         {locked ? (
@@ -157,8 +159,9 @@ export function Composer({
           </span>
         ) : (
           <button
-            type="submit"
+            type="button"
             disabled={busy}
+            onClick={() => onSubmit(notes())}
             className="flex size-10 items-center justify-center rounded-xl bg-[#6b5b7a] text-[#efe8f4] transition hover:bg-[#7a6a89] disabled:opacity-60"
             aria-label="Submit"
           >
@@ -176,6 +179,6 @@ export function Composer({
           {error}
         </p>
       ) : null}
-    </form>
+    </div>
   );
 }

@@ -100,4 +100,9 @@
   html {
     @apply font-sans;
   }
+  textarea#composer-notes {
+    pointer-events: auto;
+    user-select: text;
+    -webkit-user-select: text;
+  }
 }
