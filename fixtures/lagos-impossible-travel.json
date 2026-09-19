@@ -1,0 +1,80 @@
+{
+  "transaction_id": "txn_88213",
+  "timestamp": "2026-09-19T14:02:11Z",
+  "amount": 842.5,
+  "currency": "USD",
+  "transaction_type": "purchase",
+  "channel": "online",
+  "entry_mode": "online_keyed",
+  "card": {
+    "card_id_token": "card_harbor_9",
+    "bin": "414720",
+    "last_four": "4410",
+    "network": "Visa",
+    "card_type": "credit",
+    "expiration_month": 4,
+    "expiration_year": 2028,
+    "card_present": false,
+    "card_activated_days_ago": 410
+  },
+  "account": {
+    "account_id_token": "acct_harbor_9",
+    "account_open_date": "2021-11-02",
+    "credit_limit": 12000,
+    "available_credit": 9100,
+    "current_balance": 2900,
+    "account_status": "active",
+    "billing_country": "US",
+    "risk_tier": "low"
+  },
+  "merchant": {
+    "merchant_id_token": "merch_lagos_1",
+    "merchant_name": "Harborline Treasury",
+    "mcc_code": "5999",
+    "merchant_category": "specialty_retail",
+    "merchant_city": "Lagos",
+    "merchant_country": "NG",
+    "merchant_risk_score": 0.58,
+    "is_first_time_merchant_for_cardholder": true
+  },
+  "location": {
+    "transaction_city": "Lagos",
+    "transaction_country": "NG",
+    "distance_from_home_km": 8412,
+    "distance_from_last_transaction_km": 8412,
+    "time_since_last_transaction_minutes": 40,
+    "ip_country": "NG",
+    "device_type": "desktop",
+    "is_known_device_for_account": false
+  },
+  "authentication": {
+    "cvv_result": "no_match",
+    "avs_result": "no_match",
+    "three_ds_authenticated": false
+  },
+  "velocity_features": {
+    "transactions_last_1h": 2,
+    "transactions_last_24h": 3,
+    "amount_sum_last_24h": 910,
+    "distinct_merchants_last_24h": 2,
+    "distinct_countries_last_24h": 2,
+    "avg_transaction_amount_90d": 64,
+    "std_transaction_amount_90d": 18,
+    "declined_attempts_last_1h": 1
+  },
+  "processing": {
+    "response_code": "approved"
+  },
+  "risk_assessment": {
+    "model_risk_score": 0,
+    "decision": "approve"
+  },
+  "label": {
+    "is_fraud": true,
+    "fraud_type": "geo-impossible-travel",
+    "confirmed_by": "none"
+  },
+  "source": "real",
+  "ssn": "DROP-ME",
+  "raw_pan": "4111111111111111"
+}

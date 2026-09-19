@@ -1,0 +1,150 @@
+╔══════════════════════════════════════════════════════════════════════════════╗
+║  NEMOTRON FRAUD DETECTION RULESET — FILE 5 OF 8                            ║
+║  SECTION : MERCHANT AND AUTHENTICATION RULES                               ║
+║  CLASS   : MUTABLE — Red-Team AI may update rules and metadata each round  ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ METADATA  (Red-Team AI updates this block after each round)                │
+│                                                                             │
+│   version                  : v1.0                                          │
+│   last_updated_round       : 0                                             │
+│   last_updated_timestamp   : 2026-09-19T00:00:00Z                         │
+│   change_summary           : Initial ruleset — industry baseline           │
+│   red_team_change_rationale: N/A — initial load                            │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+These rules evaluate where the money is going (merchant risk, MCC category)
+and whether the transaction passed authentication checks (CVV, AVS, 3DS, PIN).
+Authentication failures are direct evidence of unauthorized access and carry
+some of the highest individual rule weights in the system.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+MERCHANT RISK RULES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+RULE MA-001 | HIGH ACQUIRER-ASSIGNED MERCHANT RISK SCORE
+  rule_id             : MA-001
+  condition           : merchant.merchant_risk_score >= 0.50
+  risk_contribution   : 0.30
+  severity            : medium
+  notes               : This is the acquirer's own standing risk assessment of
+                        the merchant, independent of this transaction. Scores
+                        >= 0.75 escalate severity to high and increase the
+                        risk_contribution to 0.45.
+
+RULE MA-002 | FIRST-TIME MERCHANT FOR THIS CARDHOLDER
+  rule_id             : MA-002
+  condition           : merchant.is_first_time_merchant_for_cardholder == true
+  risk_contribution   : 0.10
+  severity            : low
+  notes               : Passive signal only. Does not trigger a flag alone.
+                        Compounding with MA-001 or any authentication failure
+                        is significant and contributes to multiple attack
+                        pattern detections in FILE 6.
+
+RULE MA-003 | HIGH-RISK MERCHANT CATEGORY CODE
+  rule_id             : MA-003
+  condition           : merchant.mcc_code IN high_risk_mcc_list
+  risk_contribution   : 0.25
+  severity            : medium
+  high_risk_mcc_list  :
+    7995  (Gambling / Betting)
+    6051  (Cryptocurrency / Digital Currency Exchanges)
+    5912  (Drug Stores and Pharmacies — elevated refund-abuse rate)
+    4829  (Wire Transfer / Money Orders)
+    6211  (Securities Brokers and Dealers)
+    9754  (Online Gambling)
+    5999  (Miscellaneous and Specialty Retail — frequently misused)
+    4900  (Utility Companies — used in synthetic identity fraud)
+    7372  (Prepackaged Software — high CNP fraud rate)
+  notes               : MCC list is explicitly adjustable by red-team feedback.
+                        Severity escalates to high when combined with MA-001.
+
+RULE MA-004 | REFUND ON A MODERATE-TO-HIGH-RISK MERCHANT
+  rule_id                    : MA-004
+  condition                  : transaction_type == "refund"
+                               AND merchant.merchant_risk_score >= 0.35
+  risk_contribution          : 0.35
+  severity                   : high
+  analyst_escalation_required: true
+  notes                      : Refunds on risky merchants are a primary vector
+                               for refund abuse and merchant collusion. Always
+                               flag for analyst review.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+AUTHENTICATION FAILURE RULES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+RULE MA-005 | CVV MISMATCH
+  rule_id             : MA-005
+  condition           : authentication.cvv_result == "no_match"
+  risk_contribution   : 0.40
+  severity            : high
+  notes               : CVV mismatch on a CNP transaction strongly indicates the
+                        attacker obtained card numbers without physical access
+                        (e.g., database breach, skimming without CVV capture).
+                        Combine with MA-007 for a near-certain fraud signal.
+
+RULE MA-006 | CVV NOT PROVIDED ON CARD-NOT-PRESENT CHANNEL
+  rule_id             : MA-006
+  condition           : authentication.cvv_result == "not_provided"
+                        AND channel IN [card_not_present, online]
+  risk_contribution   : 0.20
+  severity            : medium
+  notes               : Omitting CVV on a CNP channel is suspicious but
+                        inconclusive alone; some merchants do not require it.
+                        Escalates to high when combined with GEO-006 or VB-005.
+
+RULE MA-007 | AVS FULL MISMATCH
+  rule_id             : MA-007
+  condition           : authentication.avs_result == "no_match"
+  risk_contribution   : 0.25
+  severity            : medium
+  notes               : Full address mismatch. Combined with CVV mismatch
+                        (MA-005) this pair is near-certain fraud on CNP channels
+                        and should be treated as an automatic flag.
+
+RULE MA-008 | 3-D SECURE NOT COMPLETED — HIGH-VALUE ONLINE TRANSACTION
+  rule_id             : MA-008
+  condition           : authentication.three_ds_authenticated == false
+                        AND amount >= 200.00
+                        AND channel IN [online, card_not_present]
+  risk_contribution   : 0.20
+  severity            : medium
+  notes               : 3DS absence on high-value online purchases removes the
+                        network's liability shift to the merchant, increasing
+                        the issuer's exposure. Threshold ($200) is adjustable.
+
+RULE MA-009 | MANUAL CARD NUMBER ENTRY AT POINT OF SALE
+  rule_id             : MA-009
+  condition           : entry_mode == "manual_key_entry"
+  risk_contribution   : 0.20
+  severity            : medium
+  notes               : Manual entry bypasses chip and contactless authentication.
+                        This is a legitimate fallback for technical failures but
+                        becomes a strong signal when combined with MA-001 or
+                        any velocity rule.
+
+RULE MA-010 | CASH ADVANCE OR ATM WITHDRAWAL — NEW ACCOUNT
+  rule_id             : MA-010
+  condition           : transaction_type IN ["cash_advance", "atm_withdrawal"]
+                        AND account.account_open_date within 90 days of timestamp
+  risk_contribution   : 0.35
+  severity            : high
+  notes               : Cash advances and ATM withdrawals on accounts less than
+                        90 days old are a hallmark of the bust-out fraud pattern,
+                        where a synthetic identity establishes credit and then
+                        immediately liquidates it.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+RED-TEAM LEARNED ADJUSTMENTS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+(Red-Team AI appends learnings here after each round.
+ Format each entry as: [ROUND N | rule_id affected | change made | rationale])
+
+  — No learnings recorded yet. Round 0 baseline. —
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║  END: MERCHANT AND AUTHENTICATION RULES                                    ║
+╚══════════════════════════════════════════════════════════════════════════════╝

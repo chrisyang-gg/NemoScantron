@@ -102,10 +102,10 @@ function validateIntake(request: ScanRequest):
   const note = request.text.trim();
   const file = request.file;
 
-  if (!note && !file) {
+  if (!file) {
     return {
       ok: false,
-      error: "Describe the activity or drop a .json history, then submit.",
+      error: "Attach a .json transaction file. Notes cannot be scored without it.",
     };
   }
 

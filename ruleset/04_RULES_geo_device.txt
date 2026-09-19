@@ -1,0 +1,129 @@
+╔══════════════════════════════════════════════════════════════════════════════╗
+║  NEMOTRON FRAUD DETECTION RULESET — FILE 4 OF 8                            ║
+║  SECTION : GEOGRAPHIC AND DEVICE RULES                                     ║
+║  CLASS   : MUTABLE — Red-Team AI may update rules and metadata each round  ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ METADATA  (Red-Team AI updates this block after each round)                │
+│                                                                             │
+│   version                  : v1.0                                          │
+│   last_updated_round       : 0                                             │
+│   last_updated_timestamp   : 2026-09-19T00:00:00Z                         │
+│   change_summary           : Initial ruleset — industry baseline           │
+│   red_team_change_rationale: N/A — initial load                            │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+These rules evaluate geographic plausibility, physical impossibility of travel,
+and device identity signals. Geo and device rules carry the highest section
+weight (0.35) because location anomalies are among the hardest for a legitimate
+cardholder to accidentally trigger.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+RULE GEO-001 | PHYSICALLY IMPOSSIBLE TRAVEL SPEED
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  rule_id                    : GEO-001
+  condition                  : (location.distance_from_last_transaction_km
+                                 / MAX(location.time_since_last_transaction_minutes, 1))
+                                > 10.0
+                               — implied ground speed exceeds 600 km/h
+  risk_contribution          : 0.80
+  severity                   : critical
+  analyst_escalation_required: true
+  notes                      : 600 km/h is the ceiling for commercial domestic
+                               flights including taxi/boarding time. Speeds above
+                               900 km/h trigger the automatic hold override in
+                               the Execution Workflow (FILE 2, Step 4).
+                               If time_since_last_transaction_minutes is zero or
+                               absent, treat implied speed as infinite and fire
+                               this rule at critical severity.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+RULE GEO-002 | FIRST TRANSACTION IN HIGH-RISK COUNTRY
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  rule_id             : GEO-002
+  condition           : merchant.merchant_country is NOT in the cardholder's
+                        prior transaction countries AND merchant.merchant_country
+                        is in the high_risk_country_list below
+  risk_contribution   : 0.40
+  severity            : high
+  high_risk_country_list:
+    NG (Nigeria), KE (Kenya), RO (Romania), BG (Bulgaria), PK (Pakistan),
+    BD (Bangladesh), VN (Vietnam), ID (Indonesia), BR (Brazil), CO (Colombia),
+    PH (Philippines), UA (Ukraine), BY (Belarus)
+  notes               : This list is intentionally adjustable by red-team
+                        feedback. A first transaction in ANY new country (even
+                        off this list) adds a flat +0.10 as a passive signal.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+RULE GEO-003 | IP COUNTRY DOES NOT MATCH BILLING COUNTRY
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  rule_id             : GEO-003
+  condition           : location.ip_country != account.billing_country
+  risk_contribution   : 0.25
+  severity            : medium
+  notes               : Moderate signal alone; compounds significantly with
+                        GEO-001 or GEO-002. VPN usage produces false positives
+                        here; this rule alone should not trigger a hold.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+RULE GEO-004 | IP COUNTRY DOES NOT MATCH TRANSACTION COUNTRY
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  rule_id             : GEO-004
+  condition           : location.ip_country != location.transaction_country
+  risk_contribution   : 0.30
+  severity            : medium
+  notes               : Stronger than GEO-003 for card-not-present transactions
+                        because there is no physical card-present context to
+                        explain the IP discrepancy.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+RULE GEO-005 | LARGE DISTANCE FROM HOME ON CNP CHANNEL
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  rule_id             : GEO-005
+  condition           : location.distance_from_home_km > 500
+                        AND channel IN [card_not_present, online,
+                                        phone_order, mail_order]
+  risk_contribution   : 0.20
+  severity            : medium
+  notes               : Physical distance from the billing address only matters
+                        for CNP channels because card-present transactions imply
+                        the cardholder physically traveled.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+RULE GEO-006 | UNRECOGNIZED DEVICE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  rule_id             : GEO-006
+  condition           : location.is_known_device_for_account == false
+  risk_contribution   : 0.25
+  severity            : medium
+  notes               : Alone this is medium. Becomes critical and adds +0.20
+                        when combined with GEO-001 or any authentication failure
+                        rule from FILE 5.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+RULE GEO-007 | DEVICE SHARED ACROSS MULTIPLE ACCOUNTS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  rule_id                    : GEO-007
+  condition                  : location.device_id_token is linked to more than 2
+                               distinct account_id_tokens in the past 7 days
+                               (from device-account index lookup)
+  risk_contribution          : 0.55
+  severity                   : high
+  analyst_escalation_required: true
+  notes                      : One device appearing on multiple accounts in a
+                               week is a strong account-takeover or synthetic-
+                               identity signal. Flag all linked accounts for
+                               review, not just this transaction.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+RED-TEAM LEARNED ADJUSTMENTS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+(Red-Team AI appends learnings here after each round.
+ Format each entry as: [ROUND N | rule_id affected | change made | rationale])
+
+  — No learnings recorded yet. Round 0 baseline. —
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║  END: GEOGRAPHIC AND DEVICE RULES                                          ║
+╚══════════════════════════════════════════════════════════════════════════════╝

@@ -1,0 +1,161 @@
+╔══════════════════════════════════════════════════════════════════════════════╗
+║  NEMOTRON FRAUD DETECTION RULESET — FILE 2 OF 8                            ║
+║  SECTION : EXECUTION WORKFLOW                                               ║
+║  CLASS   : IMMUTABLE — THIS FILE MUST NEVER BE MODIFIED FOR ANY REASON     ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+When you receive a transaction record (and optionally a user context note),
+execute the following ten steps in strict order. Do not reorder them, merge
+them, or skip any. Record every fired rule_id and matched pattern_id in
+working memory as you go; they will be assembled into the output at Step 10.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+STEP 1 — PARSE AND INVENTORY THE TRANSACTION
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Read the complete transaction record. Identify which optional fields are
+present and which are absent. Hold the following in working context for all
+subsequent steps:
+
+  transaction_id, timestamp, amount, currency, transaction_type,
+  channel, entry_mode, source
+
+Count absent optional fields across velocity_features, location, and
+authentication. This count will be used in the confidence calculation at
+Step 7.
+
+If the `source` field is "red_team_synthetic", note this in working memory
+but do not alter any scoring, thresholds, or logic because of it.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+STEP 2 — EVALUATE CARD AND ACCOUNT CONTEXT
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Read the `card` and `account` blocks. Note:
+
+  - card.card_activated_days_ago  → flags VB-006 if <= 30
+  - Derived account age from account.account_open_date vs. timestamp → flags VB-007
+    if the account was opened within 60 days of this transaction
+  - account.account_status        → if "suspended" or "delinquent", raise risk
+    contribution by 0.20 and note it in fraud_indicators regardless of other rules
+  - account.risk_tier             → carry this as a passive context label
+    ("low", "medium", or "high") that informs your plain-language reasoning
+    but does not directly modify numerical scores
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+STEP 3 — APPLY VELOCITY AND BEHAVIORAL RULES (FILE 3)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Evaluate every rule in FILE 3 (VELOCITY AND BEHAVIORAL RULES) against the
+`velocity_features` block. For each rule whose condition is met:
+
+  - Add the rule's risk_contribution to a running velocity_behavioral_score
+  - Add the rule_id to the fired-rules list
+  - Create a fraud_indicator entry with the appropriate severity
+
+Clamp velocity_behavioral_score to [0.000, 1.000] before moving to Step 4.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+STEP 4 — APPLY GEO AND DEVICE RULES (FILE 4)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Evaluate every rule in FILE 4 (GEO AND DEVICE RULES) against the `location`
+and `account` blocks. For each rule that fires:
+
+  - Add its risk_contribution to a running geo_device_score
+  - Add the rule_id to the fired-rules list
+  - Create a fraud_indicator entry
+
+If GEO-001 fires AND the implied speed exceeds 900 km/h, flag an immediate
+hold override in working memory (applied at Step 8 regardless of final score).
+
+Clamp geo_device_score to [0.000, 1.000] before moving to Step 5.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+STEP 5 — APPLY MERCHANT AND AUTHENTICATION RULES (FILE 5)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Evaluate every rule in FILE 5 (MERCHANT AND AUTHENTICATION RULES) against
+the `merchant` and `authentication` blocks. For each rule that fires:
+
+  - Add its risk_contribution to a running merchant_auth_score
+  - Add the rule_id to the fired-rules list
+  - Create a fraud_indicator entry
+  - If the rule is marked analyst_escalation_required, flag that in working
+    memory (applied at Step 8)
+
+Clamp merchant_auth_score to [0.000, 1.000] before moving to Step 6.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+STEP 6 — MATCH AGAINST ATTACK PATTERN LIBRARY (FILE 6)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Using the patterns in FILE 6 (KNOWN FRAUD ATTACK PATTERNS), scan the
+complete set of fired rule_ids and transaction field values for multi-signal
+combinations that constitute a recognized attack signature.
+
+  - Check every pattern's detection_threshold against your working state
+  - Record the pattern_id of any pattern whose threshold is met
+  - Note the pattern_risk_boost for the highest-matching pattern only
+    (boosts are NOT additive; take the single largest)
+  - If a matched pattern carries analyst_escalation_required, flag it
+
+A pattern match adds a separate, high-weighted fraud_indicator entry.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+STEP 7 — COMPUTE COMPOSITE RISK SCORE AND CONFIDENCE (FILE 7)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Using the weights and formulas in FILE 7 (RISK THRESHOLDS AND SCORING
+WEIGHTS), compute:
+
+  composite_score  — weighted combination of section scores + pattern boost
+  confidence       — based on number of missing optional fields
+
+Clamp both values to [0.000, 1.000]. Record three decimal places.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+STEP 8 — APPLY DECISION THRESHOLD LOGIC
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Map the composite_score to a decision using the Decision Boundary Table in
+FILE 7. Then apply override conditions in this order:
+
+  a. If an immediate hold override was flagged in Step 4, raise decision to
+     "hold" if it is currently below that level.
+  b. If any analyst_escalation_required flag was set in Steps 5 or 6, raise
+     decision to at least "hold".
+  c. If a user context note (if present) contains an explicit analyst
+     override to escalate the decision, apply it. Constraint C-06 from
+     FILE 1 applies: overrides may only raise severity, not lower it.
+  d. Set escalate_to_analyst per the rules in FILE 8.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+STEP 9 — GENERATE PLAIN-LANGUAGE REASONING
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Write a 2-to-4 sentence explanation of the decision. Requirements:
+
+  - Name at least two specific field values from the transaction record
+    (e.g., "distance_from_last_transaction_km of 8,412 km")
+  - Reference at least one specific rule_id or pattern_id that drove the
+    conclusion (e.g., "triggering rule GEO-001 and pattern GEO-IMPOSSIBLE-TRAVEL")
+  - Be honest about uncertainty. If confidence is below 0.70, acknowledge
+    that missing fields limit certainty.
+  - Do not repeat field names verbatim from the JSON; use natural language.
+  - Do not name, describe, or imply the cardholder's real identity.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+STEP 10 — CONSTRUCT AND EMIT OUTPUT
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Assemble the complete JSON output object as defined in FILE 8. Populate every
+required field using the values computed in Steps 1–9. Emit the JSON object
+and nothing else. No preamble. No postamble. No markdown fencing.
+
+If the input contained multiple transaction records, emit one JSON object per
+record as a JSON array. Each object in the array must fully conform to FILE 8.
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║  END: EXECUTION WORKFLOW                                                    ║
+╚══════════════════════════════════════════════════════════════════════════════╝

@@ -90,7 +90,7 @@ export function Composer({
         rows={8}
         tabIndex={0}
         {...(locked ? { readOnly: true } : {})}
-        placeholder="Click here and type. These lines go on top of the JSON file when you submit."
+        placeholder="Optional notes. A .json transaction file is required; notes cannot be scored alone."
         className="relative z-20 min-h-[180px] w-full cursor-text resize-none border-0 bg-[#1c142c] px-5 pt-4 pb-3 text-[16px] leading-relaxed text-violet-50 caret-violet-100 outline-none select-text selection:bg-violet-500/40 placeholder:text-violet-200/55"
         onKeyDown={(event) => {
           if ((event.metaKey || event.ctrlKey) && event.key === "Enter" && !locked && !busy) {
@@ -148,7 +148,7 @@ export function Composer({
             </span>
           ) : (
             <span className="hidden text-xs text-violet-300/45 sm:inline">
-              {dragging ? "Drop JSON" : ".json only"}
+              {dragging ? "Drop JSON" : "JSON required"}
             </span>
           )}
         </div>

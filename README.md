@@ -1,51 +1,89 @@
 # NemoScantron
 
-Credit-card / AP fraud watch powered by a Nemotron-shaped scorer. One page:
-describe the activity or drop a `.json` history, then a **fraudometer** reads
-the risk.
-
-GitHub Pages builds on every push to `main`.
+One-page credit-card fraud watch. Drop a `.json` transaction file (optional
+notes on top), assemble the eight-file ruleset, send it to **Nemotron**, and
+show the FILE 8 decision on a fraudometer.
 
 ```
-.json file ──► type check ──► schema scrub ──► Nemotron score
-                                 │
-                                 ▼
-                    extra keys dropped; missing keys ok
+optional notes + required JSON
+        │
+        ▼
+schema scrub (extra keys dropped)
+        │
+        ▼
+ruleset files 1–8, in order
+        │
+        ▼
+Nemotron (or local executor if no API key)
+        │
+        ▼
+FILE 8 JSON → website
 ```
+
+A file may be submitted without notes. Notes cannot be submitted without a file.
 
 ## Run it locally
 
 ```bash
 npm install
+cp .env.example .env.local   # add NVIDIA_API_KEY when you have one
 npm run dev
 ```
 
 Open [http://127.0.0.1:43127](http://127.0.0.1:43127).
 
+Without `NVIDIA_API_KEY` the same FILE 8 object is produced by a local
+ruleset executor so the page still works.
+
+## Ruleset
+
+`ruleset/` holds eight prompt files. CORE files are immutable. RULES files
+are what the red-team trainer may edit.
+
+| File | Class |
+|------|-------|
+| `01_CORE_identity.txt` | Immutable |
+| `02_CORE_execution_workflow.txt` | Immutable |
+| `03_RULES_velocity_behavioral.txt` | Trainable |
+| `04_RULES_geo_device.txt` | Trainable |
+| `05_RULES_merchant_auth.txt` | Trainable |
+| `06_RULES_attack_patterns.txt` | Trainable |
+| `07_RULES_thresholds.txt` | Trainable |
+| `08_CORE_output_format.txt` | Immutable |
+
+Assembly order and constraints: `ruleset/ASSEMBLY.md`.
+
 ## JSON intake
 
-Only `.json` files are accepted. Each record is projected onto
-`src/lib/data/credit-card-transaction.schema.json` before it reaches the
-scorer:
+Only `.json` files. Each record is projected onto
+`src/lib/data/credit-card-transaction.schema.json`:
 
-- Extra keys (and nested extras) are stripped.
-- Missing fields are allowed. The schema `required` list is not enforced.
-- If nothing on the schema remains after stripping, the file is rejected.
-- A file may be one transaction, an array, or `{ "transactions": [...] }`.
+- Extra keys are stripped.
+- Missing fields are allowed.
+- If nothing on the schema remains, the file is rejected.
 
-`fixtures/sample-history.json` is a partial history plus junk fields that get
-dropped on submit.
+`fixtures/lagos-impossible-travel.json` is a full high-risk sample (junk
+fields at the bottom are stripped). `fixtures/sample-history.json` is a
+partial history used to test sanitization.
 
-## Gauge bands
+## Red-team training
 
-Green / amber / red cutoffs live in `src/lib/gauge.ts` (`GAUGE_BANDS`). They
-are not exposed in the UI.
+The red team generates schema-shaped synthetic fraud. Nemotron (or the local
+executor) scores it. A feedback agent may append learnings only to RULES
+files 3–7.
+
+```bash
+npm run dev
+npm run train-ruleset
+npm run train-ruleset -- --apply
+```
+
+`--apply` writes metadata + a learned-adjustment line into the mutable files.
+CORE files are never written.
 
 ## GitHub Pages
 
 The workflow in `.github/workflows/pages.yml` static-exports Next.js with
-`basePath` `/NemoScantron` and deploys to Pages. After the first green run,
-the site is at `https://<user>.github.io/NemoScantron/`.
-
-Developer trend training is still `npm run train-trends` against a local
-`npm run dev` server.
+`basePath` `/NemoScantron`. The static host has no API route, so the page
+uses the local ruleset executor. Live Nemotron needs `NVIDIA_API_KEY` on a
+Node host (`npm run dev` or Vercel).

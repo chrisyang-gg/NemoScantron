@@ -1,0 +1,173 @@
+╔══════════════════════════════════════════════════════════════════════════════╗
+║  NEMOTRON FRAUD DETECTION RULESET — FILE 6 OF 8                            ║
+║  SECTION : KNOWN FRAUD ATTACK PATTERNS                                     ║
+║  CLASS   : MUTABLE — Red-Team AI may update patterns and metadata each     ║
+║            round. This file is the primary target of red-team learning.    ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ METADATA  (Red-Team AI updates this block after each round)                │
+│                                                                             │
+│   version                  : v1.0                                          │
+│   last_updated_round       : 0                                             │
+│   last_updated_timestamp   : 2026-09-19T00:00:00Z                         │
+│   change_summary           : Initial pattern library                       │
+│   red_team_change_rationale: N/A — initial load                            │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+Attack patterns are multi-signal combinations. When a pattern is matched, apply
+its pattern_risk_boost ON TOP of the individual rule contributions already scored.
+Do NOT add multiple pattern boosts together; take only the single highest boost
+from all matched patterns.
+
+A pattern match also populates the patterns_matched array in the output and
+creates a critical-severity fraud_indicator entry.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PATTERN CARD-TESTING
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  pattern_id          : CARD-TESTING
+  pattern_risk_boost  : +0.30
+  match_rule          : 3 or more of the following signals must be present
+  signals             :
+    - velocity_features.transactions_last_1h >= 5             [ref VB-001]
+    - amount <= 5.00                                          [micro-probe]
+    - velocity_features.declined_attempts_last_1h >= 2        [ref VB-005]
+    - merchant.is_first_time_merchant_for_cardholder == true  [ref MA-002]
+    - authentication.cvv_result IN ["no_match","not_provided"][ref MA-005/006]
+    - velocity_features.distinct_merchants_last_24h >= 4      [ref VB-004]
+  description         :
+    Rapid low-value authorization attempts to validate a stolen card number
+    before a larger purchase. Often runs across several merchants in bursts.
+    The attacker is trying to confirm the card is live without triggering a
+    large-dollar decline. The micro-transaction amount and the high frequency
+    are the key distinguishing signals.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PATTERN GEO-IMPOSSIBLE-TRAVEL
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  pattern_id          : GEO-IMPOSSIBLE-TRAVEL
+  pattern_risk_boost  : +0.25
+  match_rule          : ALL of the following must be present
+  signals             :
+    - GEO-001 fires (implied speed > 600 km/h)
+    - location.distance_from_last_transaction_km > 500
+    - channel IN [card_not_present, online]
+  description         :
+    Two transactions physically impossible within the elapsed time, strongly
+    indicating the card is being used simultaneously by two parties. The
+    card-not-present channel requirement rules out a legitimate dual-use
+    scenario with a family member at a physical terminal.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PATTERN ACCOUNT-TAKEOVER
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  pattern_id                 : ACCOUNT-TAKEOVER
+  pattern_risk_boost         : +0.35
+  match_rule                 : 3 or more of the following signals
+  analyst_escalation_required: true
+  signals                    :
+    - location.is_known_device_for_account == false            [ref GEO-006]
+    - location.ip_country != account.billing_country           [ref GEO-003]
+    - GEO-007 fires (device shared across multiple accounts)
+    - authentication.avs_result == "no_match"                  [ref MA-007]
+    - card.card_activated_days_ago > 180 AND amount >
+      (velocity_features.avg_transaction_amount_90d × 2.0)     [established card, sudden spike]
+    - velocity_features.declined_attempts_last_1h >= 1
+  description                :
+    A legitimate, established account suddenly behaving as if operated by
+    a different person. New device, mismatched IP country, wrong billing
+    address, and a spend pattern outside the cardholder's history all point
+    to credential theft rather than a new fraud account.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PATTERN SYNTHETIC-IDENTITY
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  pattern_id          : SYNTHETIC-IDENTITY
+  pattern_risk_boost  : +0.30
+  match_rule          : 3 or more of the following signals
+  signals             :
+    - account.account_open_date within 60 days of timestamp    [ref VB-007]
+    - card.card_activated_days_ago <= 45                       [ref VB-006]
+    - (account.current_balance / account.credit_limit) > 0.80 [near-limit fast]
+    - velocity_features.distinct_merchants_last_24h >= 5       [ref VB-004]
+    - authentication.avs_result IN ["no_match","partial_match"][ref MA-007]
+    - merchant.is_first_time_merchant_for_cardholder == true   [ref MA-002]
+  description         :
+    An account with fabricated identity attributes used to obtain credit that
+    is then maxed out rapidly across many merchants. The combination of a very
+    new account, a card activated almost immediately, and fast spend approaching
+    the credit limit with no organic account history is the signature pattern.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PATTERN LOW-AND-SLOW
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  pattern_id          : LOW-AND-SLOW
+  pattern_risk_boost  : +0.20
+  match_rule          : ALL of the following must be present
+  signals             :
+    - amount BETWEEN 10.00 AND 75.00
+    - velocity_features.transactions_last_24h >= 4
+    - (velocity_features.amount_sum_last_24h /
+       MAX(velocity_features.transactions_last_24h, 1)) < 80.00
+    - No individual rule from FILES 3 or 4 fires at "high" or "critical"
+  description         :
+    Transactions deliberately calibrated to sit just below threshold triggers.
+    The attacker knows the rules and is exploiting the gap between what fires
+    a rule and what constitutes fraud in aggregate. This pattern is specifically
+    designed to evade rule-based detection and will only appear through the
+    combination of multiple low-scoring signals that none of the individual
+    rules would flag on their own.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PATTERN MERCHANT-COLLUSION
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  pattern_id                 : MERCHANT-COLLUSION
+  pattern_risk_boost         : +0.35
+  match_rule                 : 2 or more of the following signals
+  analyst_escalation_required: true
+  signals                    :
+    - MA-004 fires (refund on risky merchant)
+    - merchant.merchant_risk_score >= 0.50                     [ref MA-001]
+    - transaction_type IN ["refund", "chargeback"]
+    - velocity_features.distinct_merchants_last_24h >= 3
+      AND all merchants share the same merchant_country
+    - amount > (velocity_features.avg_transaction_amount_90d × 1.5)
+  description                :
+    Funds being routed or laundered through a cooperating merchant, typically
+    via inflated purchases followed by fraudulent refunds to a mule account.
+    The refund-on-risky-merchant combination and the geographic clustering
+    of merchants are the strongest signals.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PATTERN CNP-STOLEN-CARD
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  pattern_id          : CNP-STOLEN-CARD
+  pattern_risk_boost  : +0.20
+  match_rule          : 3 or more of the following signals
+  signals             :
+    - channel IN [card_not_present, online]
+    - authentication.cvv_result == "no_match"                  [ref MA-005]
+    - authentication.avs_result IN ["no_match","partial_match"][ref MA-007]
+    - location.is_known_device_for_account == false            [ref GEO-006]
+    - merchant.is_first_time_merchant_for_cardholder == true   [ref MA-002]
+    - amount > 100.00
+  description         :
+    A card-not-present transaction where the attacker has the card number but
+    not the full account context (correct billing address, known device). The
+    authentication failures distinguish this from a legitimate CNP transaction
+    by a traveling cardholder.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+RED-TEAM LEARNED PATTERNS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+(Red-Team AI adds newly discovered patterns here after each round.
+ Use the same pattern block format as above.
+ Also update the METADATA block at the top with the round number and a
+ one-line summary of what changed.)
+
+  — No learned patterns recorded yet. Round 0 baseline. —
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║  END: KNOWN FRAUD ATTACK PATTERNS                                          ║
+╚══════════════════════════════════════════════════════════════════════════════╝

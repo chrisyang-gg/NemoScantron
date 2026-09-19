@@ -1,0 +1,122 @@
+╔══════════════════════════════════════════════════════════════════════════════╗
+║  NEMOTRON FRAUD DETECTION RULESET — FILE 3 OF 8                            ║
+║  SECTION : VELOCITY AND BEHAVIORAL RULES                                   ║
+║  CLASS   : MUTABLE — Red-Team AI may update rules and metadata each round  ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ METADATA  (Red-Team AI updates this block after each round)                │
+│                                                                             │
+│   version                  : v1.0                                          │
+│   last_updated_round       : 0                                             │
+│   last_updated_timestamp   : 2026-09-19T00:00:00Z                         │
+│   change_summary           : Initial ruleset — industry baseline           │
+│   red_team_change_rationale: N/A — initial load                            │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+These rules evaluate the velocity_features block and card/account context to
+detect behavioral anomalies. Each rule's risk_contribution is a raw score
+added to velocity_behavioral_score before section weighting is applied.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+RULE VB-001 | HIGH TRANSACTION FREQUENCY — LAST HOUR
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  rule_id             : VB-001
+  condition           : velocity_features.transactions_last_1h >= 5
+  risk_contribution   : 0.40
+  severity            : high
+  notes               : Five or more transactions in one hour is outside the
+                        norm for most cardholders. Escalate weighting by +0.10
+                        for every additional transaction beyond 5.
+                        Cross-reference with VB-005 for compounding effect.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+RULE VB-002 | LARGE AMOUNT DEVIATION FROM PERSONAL BASELINE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  rule_id             : VB-002
+  condition           : amount > (velocity_features.avg_transaction_amount_90d
+                          + (3.0 × velocity_features.std_transaction_amount_90d))
+  risk_contribution   : 0.30
+  severity            : medium
+  notes               : Three-standard-deviation outlier from this cardholder's
+                        own 90-day baseline. Weight increases by +0.10 if
+                        channel is card_not_present or online.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+RULE VB-003 | RAPID CUMULATIVE SPEND — LAST 24 HOURS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  rule_id             : VB-003
+  condition           : velocity_features.amount_sum_last_24h > 1500.00
+  risk_contribution   : 0.25
+  severity            : medium
+  notes               : Threshold should be scaled down proportionally for
+                        accounts with credit_limit below $3,000 (e.g., apply
+                        50% of the threshold for accounts with limit <= $1,500).
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+RULE VB-004 | HIGH MERCHANT DIVERSITY — LAST 24 HOURS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  rule_id             : VB-004
+  condition           : velocity_features.distinct_merchants_last_24h >= 6
+  risk_contribution   : 0.20
+  severity            : medium
+  notes               : Broad merchant spread in a short window suggests card
+                        testing across merchant types. Combine with VB-001 for
+                        a stronger card-testing signal.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+RULE VB-005 | DECLINED AUTHORIZATION ATTEMPTS — LAST HOUR
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  rule_id             : VB-005
+  condition           : velocity_features.declined_attempts_last_1h >= 2
+  risk_contribution   : 0.35
+  severity            : high
+  notes               : Two or more declines in the past hour is a strong
+                        precursor for card testing or account takeover.
+                        Score += 0.05 per additional decline beyond 2.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+RULE VB-006 | NEWLY ACTIVATED CARD
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  rule_id             : VB-006
+  condition           : card.card_activated_days_ago <= 30
+  risk_contribution   : 0.15
+  severity            : low
+  notes               : Applied as a passive multiplier (×1.10) to the final
+                        composite score rather than a standalone trigger. Newly
+                        activated cards carry elevated baseline risk regardless
+                        of transaction-level signals.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+RULE VB-007 | NEWLY OPENED ACCOUNT
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  rule_id             : VB-007
+  condition           : account.account_open_date within 60 days of timestamp
+  risk_contribution   : 0.20
+  severity            : medium
+  notes               : Synthetic identity fraud frequently presents on young
+                        accounts with rapid initial spend. Compound with
+                        SYNTHETIC-IDENTITY pattern check in FILE 6.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+RULE VB-008 | MULTI-COUNTRY ACTIVITY — LAST 24 HOURS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  rule_id             : VB-008
+  condition           : velocity_features.distinct_countries_last_24h >= 2
+  risk_contribution   : 0.30
+  severity            : high
+  notes               : More than one country in 24 hours is a standalone flag.
+                        Cross-reference with GEO-001 and GEO-002 in FILE 4 for
+                        compounding effect. Each additional country adds +0.05.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+RED-TEAM LEARNED ADJUSTMENTS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+(Red-Team AI appends learnings here after each round.
+ Format each entry as: [ROUND N | rule_id affected | change made | rationale])
+
+  — No learnings recorded yet. Round 0 baseline. —
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║  END: VELOCITY AND BEHAVIORAL RULES                                        ║
+╚══════════════════════════════════════════════════════════════════════════════╝

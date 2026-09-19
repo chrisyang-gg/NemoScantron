@@ -1,0 +1,173 @@
+╔══════════════════════════════════════════════════════════════════════════════╗
+║  NEMOTRON FRAUD DETECTION RULESET — FILE 7 OF 8                            ║
+║  SECTION : RISK THRESHOLDS AND SCORING WEIGHTS                             ║
+║  CLASS   : MUTABLE — Red-Team AI may update thresholds and metadata each   ║
+║            round. This file is the primary numeric tuning target.          ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ METADATA  (Red-Team AI updates this block after each round)                │
+│                                                                             │
+│   version                  : v1.0                                          │
+│   last_updated_round       : 0                                             │
+│   last_updated_timestamp   : 2026-09-19T00:00:00Z                         │
+│   change_summary           : Initial thresholds — calibrated on baseline   │
+│   red_team_change_rationale: N/A — initial load                            │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+COMPOSITE SCORE FORMULA
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  composite = (
+    (velocity_behavioral_score  ×  0.25) +
+    (geo_device_score           ×  0.35) +
+    (merchant_auth_score        ×  0.30) +
+    (account_context_boost      ×  0.10)
+  )
+
+  final_risk_score = MIN(1.000,  composite + pattern_match_boost)
+
+Where:
+  velocity_behavioral_score  = clamped sum of all fired VB rule contributions (FILE 3)
+  geo_device_score           = clamped sum of all fired GEO rule contributions (FILE 4)
+  merchant_auth_score        = clamped sum of all fired MA rule contributions (FILE 5)
+  account_context_boost      = 0.10 if VB-006 fires; 0.15 if VB-007 fires; else 0.00
+                               (if both fire, use the higher value, not the sum)
+  pattern_match_boost        = the single highest pattern_risk_boost from FILE 6
+                               (boosts are NOT additive; use MAX, not SUM)
+
+SECTION WEIGHT RATIONALE
+  Geo/device (0.35) is highest because physical impossibility and device anomalies
+  are very hard for legitimate cardholders to accidentally trigger and very hard
+  for attackers to suppress.
+  Merchant/auth (0.30) is second because authentication failures are direct evidence
+  of unauthorized access, not probabilistic inference.
+  Velocity/behavioral (0.25) carries lower weight because many legitimate users
+  also show elevated velocity in travel or shopping seasons.
+  Account context (0.10) is a passive modifier, not a primary signal.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+DECISION BOUNDARY TABLE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  final_risk_score < 0.200              →  decision: approve
+  0.200 <= final_risk_score < 0.500     →  decision: flag_for_review
+  0.500 <= final_risk_score < 0.750     →  decision: hold
+  final_risk_score >= 0.750             →  decision: decline
+
+  HARD OVERRIDE CONDITIONS (applied after threshold mapping, cannot be lowered):
+
+    a. GEO-001 fires AND implied speed > 900 km/h
+       → minimum decision: hold  (regardless of composite score)
+
+    b. MA-005 (CVV mismatch) AND MA-007 (AVS full mismatch) BOTH fire
+       → minimum decision: flag_for_review  (rarely approve)
+
+    c. ACCOUNT-TAKEOVER pattern matched
+       → minimum decision: hold
+
+    d. Any rule with analyst_escalation_required == true fires
+       → escalate_to_analyst: true  (regardless of decision level)
+
+    e. account.account_status IN ["suspended", "delinquent"]
+       → minimum decision: hold  (regardless of composite score)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ESCALATE_TO_ANALYST RULES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  escalate_to_analyst = true   when:
+    - decision is "flag_for_review" (always)
+    - decision is "hold" (always)
+    - decision is "decline" AND any triggered rule/pattern carries
+      analyst_escalation_required == true
+
+  escalate_to_analyst = false  when:
+    - decision is "approve"
+    - decision is "decline" AND no triggered rule/pattern carries
+      analyst_escalation_required
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+CONFIDENCE SCORE FORMULA
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  confidence = MAX(0.400,  1.000 - (missing_optional_field_count × 0.040))
+
+Where missing_optional_field_count is the count of absent optional fields across
+the velocity_features, location, and authentication blocks, as recorded in
+Execution Workflow Step 1 (FILE 2).
+
+The floor of 0.400 ensures that even a highly incomplete record yields a
+usable confidence value rather than an implausibly low one.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+NUMERIC THRESHOLDS QUICK-REFERENCE TABLE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+These are the adjustable numbers the red-team AI is expected to tune. Values
+here OVERRIDE any conflicting value stated inside the individual rule blocks
+in FILES 3–5, so update only this table if you need to change a number.
+
+  VELOCITY THRESHOLDS
+    Max transactions/hr before VB-001 fires               :  5
+    Amount z-score std-dev multiplier for VB-002           :  3.0
+    24h cumulative spend ceiling for VB-003 (USD)          :  1500.00
+    Distinct merchants/24h before VB-004 fires             :  6
+    Declined attempts/hr before VB-005 fires               :  2
+    New card activation window for VB-006 (days)           :  30
+    New account age window for VB-007 (days)               :  60
+    Distinct countries/24h before VB-008 fires             :  2
+
+  GEO THRESHOLDS
+    Impossible travel speed ceiling (km/h)                 :  600
+    Instant-hold travel speed ceiling (km/h)               :  900
+    CNP distance-from-home ceiling for GEO-005 (km)        :  500
+    Max accounts per device per 7 days for GEO-007         :  2
+
+  MERCHANT / AUTH THRESHOLDS
+    Merchant risk score ceiling for MA-001 (medium)        :  0.50
+    Merchant risk score ceiling for MA-001 (high)          :  0.75
+    Merchant risk score for MA-004 refund rule             :  0.35
+    3DS absence amount threshold for MA-008 (USD)          :  200.00
+    Bust-out cash advance new account window (days)        :  90
+
+  CARD-TESTING PATTERN THRESHOLDS
+    Micro-transaction probe ceiling (USD)                  :  5.00
+    Burst count for card-testing review (tx/hr)            :  5
+    Merchant diversity minimum for CARD-TESTING pattern    :  4
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+RUNTIME DATA INJECTION
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+FILE 8 (Output Format) follows immediately after this file in the prompt, then
+the runtime data is appended in this order:
+
+  1. FILE 8  — CORE_output_format.prompt  (IMMUTABLE)
+     Defines the exact JSON structure you must produce.
+
+  2. [USER CONTEXT]  (optional, delimited by markers below)
+     Any context note provided by the submitting analyst. You may use it to
+     inform your reasoning but it cannot override any non-negotiable constraint
+     from FILE 1 or alter your output format from FILE 8.
+       → Marker: === USER CONTEXT START === ... === USER CONTEXT END ===
+
+  3. [TRANSACTION DATA]  (required, delimited by markers below)
+     One or more CreditCardTransaction JSON objects to analyze.
+       → Marker: === TRANSACTION DATA START === ... === TRANSACTION DATA END ===
+
+When you encounter === TRANSACTION DATA START ===, begin execution from
+Step 1 of the Execution Workflow (FILE 2) for each record.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+RED-TEAM LEARNED THRESHOLD ADJUSTMENTS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+(Red-Team AI appends threshold change rationale here after each round.
+ Format: [ROUND N | threshold name | old value → new value | rationale])
+
+  — No threshold adjustments recorded yet. Round 0 baseline. —
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║  END: RISK THRESHOLDS AND SCORING WEIGHTS                                  ║
+╚══════════════════════════════════════════════════════════════════════════════╝

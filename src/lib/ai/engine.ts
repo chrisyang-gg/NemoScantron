@@ -4,7 +4,7 @@ export type AgentEngine = {
   label: string;
 };
 
-const DEFAULT_MODEL = "nvidia/llama-3.1-nemotron-70b-instruct";
+const DEFAULT_MODEL = "nvidia/nemotron-3-super-120b-a12b";
 
 export function aiStatus(): AgentEngine {
   const key = process.env.NVIDIA_API_KEY?.trim();

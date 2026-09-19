@@ -4,6 +4,10 @@ const githubPages = process.env.GITHUB_PAGES === "true";
 
 const nextConfig: NextConfig = {
   images: { unoptimized: true },
+  outputFileTracingIncludes: {
+    "/api/analyze": ["./ruleset/**/*"],
+    "/api/train-ruleset": ["./ruleset/**/*"],
+  },
   ...(githubPages
     ? {
         output: "export" as const,

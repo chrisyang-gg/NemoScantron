@@ -1,14 +1,12 @@
 "use client";
 
 import { useState } from "react";
+import { AnalysisCard } from "@/components/site/analysis-card";
 import { Composer } from "@/components/site/composer";
 import { Fraudometer } from "@/components/site/fraudometer";
-import { buildBackendPayload, sendToBackend } from "@/lib/backend";
-import {
-  scoreSubmission,
-  unlockSubmissions,
-  type AttachedJson,
-} from "@/lib/pipeline/client-scan";
+import { analyzeSubmission, worstAnalysis } from "@/lib/nemotron/client-run";
+import type { NemotronAnalysis } from "@/lib/nemotron/types";
+import { unlockSubmissions, type AttachedJson } from "@/lib/pipeline/client-scan";
 import { cn } from "@/lib/utils";
 
 type Phase = "compose" | "locked" | "editing";
@@ -22,7 +20,9 @@ export function ScanView() {
   const [busy, setBusy] = useState(false);
   const [score, setScore] = useState(0);
   const [ignition, setIgnition] = useState(0);
-  const [summary, setSummary] = useState<string | null>(null);
+  const [analysis, setAnalysis] = useState<NemotronAnalysis | null>(null);
+  const [engine, setEngine] = useState("nemoscantron-local (ruleset mock)");
+  const [usedMock, setUsedMock] = useState(true);
   const [droppedNote, setDroppedNote] = useState<string | null>(null);
 
   const gaugeVisible = phase !== "compose";
@@ -32,21 +32,23 @@ export function ScanView() {
     setText(notes);
     setBusy(true);
     setError(null);
-    const result = scoreSubmission({ text: notes, file });
+    const result = await analyzeSubmission({ notes, file });
     if (!result.ok) {
       setBusy(false);
       setError(result.error);
       return;
     }
-    await sendToBackend(buildBackendPayload(notes, file));
+    const primary = worstAnalysis(result.analyses);
     setBusy(false);
-    setScore(result.score);
-    setSummary(result.reasoning.explanation?.headline ?? result.reasoning.summary);
+    setAnalysis(primary);
+    setEngine(result.engine);
+    setUsedMock(result.usedMock);
+    setScore(Math.round(primary.risk_score * 100));
     setDroppedNote(
       result.droppedFields.length
         ? `Stripped ${result.droppedFields.length} extra field${
             result.droppedFields.length === 1 ? "" : "s"
-          } before scoring.`
+          } before the ruleset.`
         : null,
     );
     setIgnition((value) => value + 1);
@@ -59,7 +61,7 @@ export function ScanView() {
     setFile(null);
     setError(null);
     setScore(0);
-    setSummary(null);
+    setAnalysis(null);
     setDroppedNote(null);
     setNotesKey((value) => value + 1);
     setPhase("compose");
@@ -77,33 +79,28 @@ export function ScanView() {
         className={cn(
           "pointer-events-none flex flex-col items-center overflow-hidden transition-all duration-700 ease-in-out",
           gaugeVisible
-            ? "mb-4 max-h-[460px] flex-1 opacity-100"
+            ? "mb-3 max-h-[360px] flex-none opacity-100"
             : "mb-0 max-h-0 flex-none opacity-0",
         )}
         aria-hidden={!gaugeVisible}
         inert={!gaugeVisible ? true : undefined}
       >
-        <div className="flex flex-1 flex-col items-center justify-center">
-          {gaugeVisible ? (
-            <>
-              <p className="mb-1 text-[11px] tracking-[0.35em] text-violet-300/60 uppercase">
-                Fraudometer
-              </p>
-              <Fraudometer score={score} ignition={ignition} />
-              {summary ? (
-                <p className="mt-1 max-w-md text-center text-sm text-violet-200/70">
-                  {summary}
-                </p>
-              ) : null}
-              {droppedNote ? (
-                <p className="mt-2 max-w-md text-center text-xs text-violet-300/55">
-                  {droppedNote}
-                </p>
-              ) : null}
-            </>
-          ) : null}
-        </div>
+        <p className="mb-1 text-[11px] tracking-[0.35em] text-violet-300/60 uppercase">
+          Fraudometer
+        </p>
+        <Fraudometer score={score} ignition={ignition} />
       </div>
+
+      {analysis && gaugeVisible ? (
+        <div className="mx-auto mb-4 flex w-full justify-center">
+          <AnalysisCard
+            analysis={analysis}
+            engine={engine}
+            usedMock={usedMock}
+            extra={droppedNote}
+          />
+        </div>
+      ) : null}
 
       <div
         className={cn(

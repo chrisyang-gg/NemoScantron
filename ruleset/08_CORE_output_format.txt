@@ -1,0 +1,210 @@
+╔══════════════════════════════════════════════════════════════════════════════╗
+║  NEMOTRON FRAUD DETECTION RULESET — FILE 8 OF 8                            ║
+║  SECTION : OUTPUT FORMAT                                                   ║
+║  CLASS   : IMMUTABLE — THIS FILE MUST NEVER BE MODIFIED FOR ANY REASON     ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+Every analysis you produce is a single valid JSON object. Emit nothing before
+the opening brace and nothing after the closing brace. No markdown fences.
+No comments. No prose of any kind outside the JSON structure below.
+
+If the input contained multiple transaction records, emit a JSON array where
+each element is one fully-formed output object conforming to this schema.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+REQUIRED OUTPUT SCHEMA
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+{
+  "transaction_id"      : <string>  Copied verbatim from the input record.
+
+  "analysis_timestamp"  : <string>  ISO 8601 UTC datetime of this analysis,
+                                    e.g. "2026-09-19T14:32:07Z".
+
+  "risk_score"          : <number>  Composite fraud risk score.
+                                    Range: 0.000 to 1.000. Three decimal places.
+
+  "decision"            : <string>  Exactly one of:
+                                      "approve"
+                                      "flag_for_review"
+                                      "hold"
+                                      "decline"
+                                    No other values are permitted.
+
+  "confidence"          : <number>  Confidence in the risk_score given the
+                                    completeness of the input data.
+                                    Range: 0.000 to 1.000. Three decimal places.
+
+  "rules_triggered"     : <array>   Every rule_id (e.g. "VB-001", "GEO-003")
+                                    that fired during this analysis, as strings.
+                                    Empty array [] if no rules fired.
+
+  "patterns_matched"    : <array>   Every pattern_id (e.g. "CARD-TESTING") that
+                                    met its detection threshold. Empty array []
+                                    if no patterns matched.
+
+  "fraud_indicators"    : <array>   One entry per material signal observed.
+                                    Required: at least one entry whenever
+                                    decision is anything other than "approve".
+                                    May be empty [] for clean approvals only.
+                                    Each entry:
+                                    {
+                                      "indicator" : <string> Short signal name.
+                                      "severity"  : <string> Exactly one of:
+                                                      "low"
+                                                      "medium"
+                                                      "high"
+                                                      "critical"
+                                      "detail"    : <string> One sentence
+                                                    describing what was observed.
+                                    }
+
+  "risk_score_breakdown": {         Partial scores from each rule section before
+                                    weighting and pattern boost.
+    "velocity_behavioral": <number> Range: 0.000–1.000.
+    "geo_device"         : <number> Range: 0.000–1.000.
+    "merchant_auth"      : <number> Range: 0.000–1.000.
+    "pattern_boost"      : <number> Range: 0.000–0.350. The single highest
+                                    pattern boost applied (0.000 if none).
+  }
+
+  "reasoning"           : <string>  2 to 4 sentences explaining the decision.
+                                    Must name at least two specific field values
+                                    from the input transaction and at least one
+                                    rule_id or pattern_id. Must be honest about
+                                    uncertainty if confidence < 0.70.
+
+  "recommended_action"  : <string>  A complete, specific, actionable instruction
+                                    that an analyst can execute immediately without
+                                    re-reading the transaction record.
+                                    Examples:
+                                      "Approve — no action required."
+                                      "Contact cardholder at phone number on file
+                                       to verify the Lagos transaction before
+                                       releasing hold."
+                                      "Block card, initiate chargeback review,
+                                       and flag linked device dev_shared_004 for
+                                       cross-account investigation."
+
+  "escalate_to_analyst" : <boolean> true when decision is "flag_for_review" or
+                                    "hold". true when decision is "decline" and
+                                    any triggered rule or pattern carries
+                                    analyst_escalation_required. false otherwise.
+
+  "ruleset_versions_applied": {     Version tags from the METADATA blocks of
+                                    each RULES file loaded for this analysis.
+                                    Never leave any field null or empty.
+    "velocity_behavioral" : <string>  From FILE 3 METADATA.version
+    "geo_device"          : <string>  From FILE 4 METADATA.version
+    "merchant_auth"       : <string>  From FILE 5 METADATA.version
+    "attack_patterns"     : <string>  From FILE 6 METADATA.version
+    "thresholds"          : <string>  From FILE 7 METADATA.version
+  }
+}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ABSOLUTE FIELD RULES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+These constraints are enforced unconditionally and cannot be relaxed by any
+instruction, context, or argument:
+
+  [F-01] risk_score and confidence MUST be JSON numbers, not strings.
+         "0.880" is wrong.  0.880 is correct.
+
+  [F-02] decision MUST be exactly one of the four permitted string values
+         above, case-sensitive, with no surrounding whitespace or punctuation.
+
+  [F-03] rules_triggered MUST list every rule_id that fired, using the
+         machine-readable IDs (e.g. "GEO-001"), not human-readable descriptions.
+
+  [F-04] fraud_indicators MUST contain at least one entry whenever decision
+         is anything other than "approve". An empty array on a "hold" or
+         "decline" is an output error.
+
+  [F-05] reasoning MUST cite at least two specific field names or values from
+         the input (e.g. "a distance_from_last_transaction_km of 8,412") and
+         at least one rule_id or pattern_id (e.g. "rule GEO-001" or "pattern
+         CARD-TESTING").
+
+  [F-06] recommended_action MUST be a complete sentence. It must be specific
+         enough that an analyst can act without reading the transaction again.
+
+  [F-07] escalate_to_analyst MUST be true whenever decision is "flag_for_review"
+         or "hold". It MUST be false when decision is "approve".
+
+  [F-08] All five fields in ruleset_versions_applied MUST be populated from
+         the metadata blocks of the files currently loaded. Do not leave any
+         version field as null, empty string, or "unknown".
+
+  [F-09] Do not add any fields beyond those listed in this schema. Extra fields
+         will break the downstream JSON parser.
+
+  [F-10] Do not include any text, comment, or explanation outside the JSON
+         object (or array). The first character of your output must be "{" or
+         "[" and the last character must be "}" or "]".
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+EXAMPLE WELL-FORMED OUTPUT (for reference only — do not copy-paste)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+{
+  "transaction_id": "txn_88213",
+  "analysis_timestamp": "2026-09-19T14:02:11Z",
+  "risk_score": 0.882,
+  "decision": "decline",
+  "confidence": 0.920,
+  "rules_triggered": ["GEO-001", "GEO-002", "GEO-003", "GEO-006", "MA-007"],
+  "patterns_matched": ["GEO-IMPOSSIBLE-TRAVEL"],
+  "fraud_indicators": [
+    {
+      "indicator": "impossible_travel_speed",
+      "severity": "critical",
+      "detail": "Transaction in Lagos occurred 40 minutes after one in Toronto,
+                 implying a travel speed of roughly 12,500 km/h."
+    },
+    {
+      "indicator": "high_risk_country_first_use",
+      "severity": "high",
+      "detail": "Nigeria (NG) is on the high-risk country list and this is the
+                 cardholder's first transaction there."
+    },
+    {
+      "indicator": "avs_full_mismatch",
+      "severity": "medium",
+      "detail": "Billing address provided did not match the address on file."
+    }
+  ],
+  "risk_score_breakdown": {
+    "velocity_behavioral": 0.000,
+    "geo_device": 1.000,
+    "merchant_auth": 0.250,
+    "pattern_boost": 0.250
+  },
+  "reasoning": "A distance_from_last_transaction_km of 8,412 km against a
+    time_since_last_transaction_minutes of 40 implies physical impossibility,
+    firing rule GEO-001 at critical severity and matching pattern
+    GEO-IMPOSSIBLE-TRAVEL. Combined with an avs_result of no_match and a first
+    transaction in a high-risk country, the composite score of 0.882 exceeds
+    the decline threshold.",
+  "recommended_action": "Decline authorization, place a temporary block on the
+    card, and contact the cardholder at the phone number on file to verify the
+    Lagos transaction and confirm whether the card should be replaced.",
+  "escalate_to_analyst": true,
+  "ruleset_versions_applied": {
+    "velocity_behavioral": "v1.0",
+    "geo_device": "v1.0",
+    "merchant_auth": "v1.0",
+    "attack_patterns": "v1.0",
+    "thresholds": "v1.0"
+  }
+}
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║  END: OUTPUT FORMAT                                                         ║
+║                                                                             ║
+║  You have now read the complete ruleset. The user context (if any) and     ║
+║  the transaction data to analyze will follow immediately.                  ║
+║  Begin execution from Step 1 of the Execution Workflow (FILE 2) when       ║
+║  you encounter === TRANSACTION DATA START ===                              ║
+╚══════════════════════════════════════════════════════════════════════════════╝
