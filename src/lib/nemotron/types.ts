@@ -42,7 +42,6 @@ export type AnalyzeSuccess = {
   ok: true;
   analyses: NemotronAnalysis[];
   engine: string;
-  usedMock: boolean;
   droppedFields: string[];
   filename?: string;
 };

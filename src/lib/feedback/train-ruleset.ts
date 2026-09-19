@@ -1,7 +1,6 @@
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { completeJson } from "@/lib/ai/engine";
-import { localAnalyze } from "@/lib/nemotron/local-analyze";
 import { runAnalyze } from "@/lib/nemotron/run-analyze";
 import type { NemotronAnalysis } from "@/lib/nemotron/types";
 import { generateFraudBatch, type GeneratedCase } from "@/lib/red-team/generate";
@@ -34,7 +33,7 @@ export async function runTrainingRound(options: {
   const apply = Boolean(options.apply);
   const batch = generateFraudBatch(options.count ?? 4);
   const analyses: { generated: GeneratedCase; analysis: NemotronAnalysis }[] = [];
-  let engine = "nemoscantron-local (ruleset mock)";
+  let engine = "nvidia-nemotron";
 
   for (const generated of batch) {
     const result = await runAnalyze({
@@ -46,11 +45,7 @@ export async function runTrainingRound(options: {
       },
     });
     if (!result.ok) {
-      analyses.push({
-        generated,
-        analysis: localAnalyze(generated.record, generated.description),
-      });
-      continue;
+      throw new Error(result.error);
     }
     engine = result.engine;
     analyses.push({ generated, analysis: result.analyses[0] });

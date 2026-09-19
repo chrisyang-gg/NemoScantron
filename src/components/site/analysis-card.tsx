@@ -4,12 +4,10 @@ import { cn } from "@/lib/utils";
 export function AnalysisCard({
   analysis,
   engine,
-  usedMock,
   extra,
 }: {
   analysis: NemotronAnalysis;
   engine: string;
-  usedMock: boolean;
   extra?: string | null;
 }) {
   return (
@@ -54,7 +52,7 @@ export function AnalysisCard({
         Confidence {analysis.confidence.toFixed(3)}
         {analysis.escalate_to_analyst ? " · escalate to analyst" : ""}
         {" · "}
-        {usedMock ? "local ruleset executor" : engine}
+        {engine}
       </p>
       {extra ? <p className="mt-2 text-xs text-violet-300/55">{extra}</p> : null}
     </section>

@@ -21,8 +21,7 @@ export function ScanView() {
   const [score, setScore] = useState(0);
   const [ignition, setIgnition] = useState(0);
   const [analysis, setAnalysis] = useState<NemotronAnalysis | null>(null);
-  const [engine, setEngine] = useState("nemoscantron-local (ruleset mock)");
-  const [usedMock, setUsedMock] = useState(true);
+  const [engine, setEngine] = useState("nvidia-nemotron");
   const [droppedNote, setDroppedNote] = useState<string | null>(null);
 
   const gaugeVisible = phase !== "compose";
@@ -42,7 +41,6 @@ export function ScanView() {
     setBusy(false);
     setAnalysis(primary);
     setEngine(result.engine);
-    setUsedMock(result.usedMock);
     setScore(Math.round(primary.risk_score * 100));
     setDroppedNote(
       result.droppedFields.length
@@ -96,7 +94,6 @@ export function ScanView() {
           <AnalysisCard
             analysis={analysis}
             engine={engine}
-            usedMock={usedMock}
             extra={droppedNote}
           />
         </div>

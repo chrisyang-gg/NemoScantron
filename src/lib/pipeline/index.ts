@@ -1,18 +1,13 @@
 import { proposeFeedback } from "@/lib/ai/feedback-agent";
+import { runAnalyze } from "@/lib/nemotron/run-analyze";
+import type { NemotronAnalysis } from "@/lib/nemotron/types";
 import { dispatchWithNemo } from "@/lib/pipeline/execute";
-import { reasonWithNemotron } from "@/lib/pipeline/reasoning";
-import { matchRules } from "@/lib/pipeline/ruleset";
 import { sanitizeInput } from "@/lib/pipeline/sanitize";
-import {
-  isJsonFilename,
-  parseJsonFile,
-  sanitizeCreditCardJson,
-  stringifySanitizedRecords,
-} from "@/lib/pipeline/schema-sanitize";
 import { addProposals, addRun, getStore } from "@/lib/pipeline/store";
 import type {
   GeneratedAttack,
   PipelineRun,
+  ReasoningResult,
   ScanInput,
   SourceKind,
   Verdict,
@@ -40,19 +35,30 @@ export async function runPipeline(request: RunRequest): Promise<PipelineRun> {
     redTeam: request.redTeam,
   };
 
-  const prepared = prepareJsonAgainstSchema(input.rawText, input.filename);
-  input.rawText = prepared.text;
+  const analyzed = await runAnalyze({
+    notes: request.prompt,
+    file: {
+      name: request.filename || "payload.json",
+      text: request.rawText,
+      mime: "application/json",
+    },
+  });
+  if (!analyzed.ok) {
+    throw new Error(analyzed.error);
+  }
+
+  const primary = analyzed.analyses[0];
+  input.rawText = request.rawText;
   const sanitized = sanitizeInput(input);
-  if (prepared.dropped.length) {
+  if (analyzed.droppedFields.length) {
     sanitized.stripped.push(
-      `${prepared.dropped.length} extra field(s) not in the credit-card schema`,
+      `${analyzed.droppedFields.length} extra field(s) not in the credit-card schema`,
     );
     sanitized.warnings.push(
-      `Removed fields before scoring: ${prepared.dropped.slice(0, 8).join(", ")}.`,
+      `Removed fields before Nemotron: ${analyzed.droppedFields.slice(0, 8).join(", ")}.`,
     );
   }
-  const hits = matchRules(sanitized.text, getStore().rules);
-  const reasoning = reasonWithNemotron({ input, sanitized, hits });
+  const reasoning = reasoningFromNemotron(primary, analyzed.engine);
   const actions = dispatchWithNemo(reasoning, input.source);
 
   const run: PipelineRun = {
@@ -63,7 +69,7 @@ export async function runPipeline(request: RunRequest): Promise<PipelineRun> {
     actions,
     metrics: {
       riskScore: reasoning.riskScore,
-      ruleHits: hits.length,
+      ruleHits: primary.rules_triggered.length,
       latencyMs: Date.now() - started,
       description: reasoning.summary,
     },
@@ -76,27 +82,41 @@ export async function runPipeline(request: RunRequest): Promise<PipelineRun> {
   return run;
 }
 
-function prepareJsonAgainstSchema(
-  rawText: string,
-  filename?: string,
-): { text: string; dropped: string[] } {
-  const looksJson = filename ? isJsonFilename(filename) : rawText.trim().startsWith("{") || rawText.trim().startsWith("[");
-  if (!looksJson) return { text: rawText, dropped: [] };
-
-  const parsed = parseJsonFile(rawText);
-  if (!parsed.ok) return { text: rawText, dropped: [] };
-
-  const sanitized = sanitizeCreditCardJson(parsed.value);
-  if (!sanitized.ok) {
-    if (filename && isJsonFilename(filename)) {
-      throw new Error(sanitized.error);
-    }
-    return { text: rawText, dropped: [] };
-  }
-
+function reasoningFromNemotron(analysis: NemotronAnalysis, engine: string): ReasoningResult {
+  const verdict: Verdict =
+    analysis.decision === "approve"
+      ? "clear"
+      : analysis.decision === "flag_for_review"
+        ? "suspicious"
+        : "fraud";
   return {
-    text: stringifySanitizedRecords(sanitized.records),
-    dropped: sanitized.dropped,
+    engine,
+    verdict,
+    riskScore: Math.round(analysis.risk_score * 100),
+    confidence: Math.round(analysis.confidence * 100),
+    summary: analysis.reasoning,
+    steps: [
+      { title: "Nemotron decision", detail: analysis.decision },
+      { title: "Recommended action", detail: analysis.recommended_action },
+    ],
+    matchedRules: analysis.rules_triggered.map((id) => ({
+      ruleId: id,
+      title: id,
+      severity: "flag",
+      policy: id,
+      evidence: [id],
+    })),
+    explanation: {
+      headline: analysis.decision,
+      body: analysis.reasoning,
+      findings: analysis.fraud_indicators.map((item) => ({
+        title: item.indicator,
+        severity: item.severity === "critical" || item.severity === "high" ? "block" : "flag",
+        policy: item.indicator,
+        evidence: [item.detail],
+        why: item.detail,
+      })),
+    },
   };
 }
 

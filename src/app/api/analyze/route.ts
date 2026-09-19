@@ -14,7 +14,8 @@ export async function POST(request: Request) {
   });
 
   if (!result.ok) {
-    return Response.json(result, { status: 400 });
+    const status = result.error.includes("NVIDIA_API_KEY") ? 503 : 400;
+    return Response.json(result, { status });
   }
   return Response.json(result);
 }

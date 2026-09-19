@@ -7,9 +7,15 @@ export async function POST(request: Request) {
     apply?: boolean;
     count?: number;
   };
-  const result = await runTrainingRound({
-    apply: Boolean(body.apply),
-    count: body.count,
-  });
-  return Response.json(result);
+  try {
+    const result = await runTrainingRound({
+      apply: Boolean(body.apply),
+      count: body.count,
+    });
+    return Response.json(result);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Training failed.";
+    const status = message.includes("NVIDIA_API_KEY") ? 503 : 400;
+    return Response.json({ ok: false, error: message }, { status });
+  }
 }

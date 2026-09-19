@@ -11,9 +11,9 @@ export function aiStatus(): AgentEngine {
   const model = process.env.NVIDIA_NEMOTRON_MODEL?.trim() || DEFAULT_MODEL;
   if (!key) {
     return {
-      id: "nemoscantron-local",
+      id: "nvidia-nemotron",
       live: false,
-      label: "nemoscantron-local (Nemotron-compatible)",
+      label: "nvidia-nemotron (missing NVIDIA_API_KEY)",
     };
   }
   return { id: model, live: true, label: model };

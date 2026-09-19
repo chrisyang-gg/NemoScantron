@@ -1,8 +1,11 @@
 # NemoScantron
 
 One-page credit-card fraud watch. Drop a `.json` transaction file (optional
-notes on top), assemble the eight-file ruleset, send it to **Nemotron**, and
-show the FILE 8 decision on a fraudometer.
+notes on top), assemble the eight-file ruleset, send it to **NVIDIA Nemotron**,
+and show the FILE 8 decision on a fraudometer.
+
+There is no local or default scorer. If `NVIDIA_API_KEY` is missing, submit
+returns an error.
 
 ```
 optional notes + required JSON
@@ -14,7 +17,7 @@ schema scrub (extra keys dropped)
 ruleset files 1–8, in order
         │
         ▼
-Nemotron (or local executor if no API key)
+NVIDIA Nemotron
         │
         ▼
 FILE 8 JSON → website
@@ -26,14 +29,13 @@ A file may be submitted without notes. Notes cannot be submitted without a file.
 
 ```bash
 npm install
-cp .env.example .env.local   # add NVIDIA_API_KEY when you have one
+# edit .env and paste NVIDIA_API_KEY
 npm run dev
 ```
 
 Open [http://127.0.0.1:43127](http://127.0.0.1:43127).
 
-Without `NVIDIA_API_KEY` the same FILE 8 object is produced by a local
-ruleset executor so the page still works.
+`.env` is gitignored. `.env.example` is the template.
 
 ## Ruleset
 
@@ -56,34 +58,18 @@ Assembly order and constraints: `ruleset/ASSEMBLY.md`.
 ## JSON intake
 
 Only `.json` files. Each record is projected onto
-`src/lib/data/credit-card-transaction.schema.json`:
+`src/lib/data/credit-card-transaction.schema.json`.
 
-- Extra keys are stripped.
-- Missing fields are allowed.
-- If nothing on the schema remains, the file is rejected.
-
-`fixtures/lagos-impossible-travel.json` is a full high-risk sample (junk
-fields at the bottom are stripped). `fixtures/sample-history.json` is a
-partial history used to test sanitization.
+`fixtures/lagos-impossible-travel.json` is a full high-risk sample.
 
 ## Red-team training
 
-The red team generates schema-shaped synthetic fraud. Nemotron (or the local
-executor) scores it. A feedback agent may append learnings only to RULES
-files 3–7.
+Needs the same `NVIDIA_API_KEY`. The red team generates schema-shaped
+synthetic fraud, Nemotron scores it, and a feedback agent may append
+learnings only to RULES files 3–7.
 
 ```bash
 npm run dev
 npm run train-ruleset
 npm run train-ruleset -- --apply
 ```
-
-`--apply` writes metadata + a learned-adjustment line into the mutable files.
-CORE files are never written.
-
-## GitHub Pages
-
-The workflow in `.github/workflows/pages.yml` static-exports Next.js with
-`basePath` `/NemoScantron`. The static host has no API route, so the page
-uses the local ruleset executor. Live Nemotron needs `NVIDIA_API_KEY` on a
-Node host (`npm run dev` or Vercel).
