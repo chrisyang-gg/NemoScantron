@@ -15,7 +15,8 @@ export async function POST(request: Request) {
     return Response.json(result);
   } catch (error) {
     const message = error instanceof Error ? error.message : "Training failed.";
-    const status = message.includes("NVIDIA_API_KEY") ? 503 : 400;
+    const status =
+      message.includes("NVIDIA_API_KEY") || message.includes("ANTHROPIC_API_KEY") ? 503 : 400;
     return Response.json({ ok: false, error: message }, { status });
   }
 }

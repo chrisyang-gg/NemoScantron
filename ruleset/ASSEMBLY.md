@@ -22,4 +22,6 @@ A file may be submitted without notes. Notes may never be submitted without a fi
 → [what to output] → [optional notes] → [transactions]
 ```
 
-The assembler lives in `src/lib/ruleset/assemble.ts`. Nemotron sees only the assembled prompt. Training writes only files 3–7.
+The assembler lives in `src/lib/ruleset/assemble.ts`. Scoring Nemotron sees
+the assembled prompt. Red-team training (`npm run red-team`) writes only
+files 3–7, and only the files implicated by that round.

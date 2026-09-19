@@ -49,3 +49,5 @@ next-env.d.ts
 
 # red-team trainer
 ruleset/.train-state.json
+fixtures/red-team/rounds/**
+!fixtures/red-team/rounds/.gitkeep

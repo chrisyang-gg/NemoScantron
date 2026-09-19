@@ -67,12 +67,27 @@ the page, so a cut-off or inner-quote score should not surface a raw V8 JSON err
 
 ## Red-team training
 
-Needs the same `NVIDIA_API_KEY`. The red team generates schema-shaped
-synthetic fraud, Nemotron scores it, and a feedback agent may append
-learnings only to RULES files 3–7.
+Developers run this from the repo. It is not a website button.
+
+1. **Nemotron** writes one credit-card case at a time (1–10). Each case
+   includes a gold label, a short description, and the trick it is aiming
+   at the scorer (edge, rare, hard, or a clean lookalike).
+2. The CLI prints progress and writes each finished case under
+   `fixtures/red-team/rounds/`.
+3. A **second Nemotron** scores those cases. Gold labels are stripped
+   first so the scorer is not spoon-fed the answer.
+4. **Claude** sees only the RULES files 3–7 implicated by disagreements
+   and gold categories — not CORE, not untouched sections. It appends
+   learned-adjustment lines. CORE files stay immutable.
+
+Needs `NVIDIA_API_KEY` for generate + score, and `ANTHROPIC_API_KEY` for
+the Claude pass. Count is 1–10.
 
 ```bash
-npm run dev
-npm run train-ruleset
-npm run train-ruleset -- --apply
+npm run red-team -- --count 4
+npm run red-team -- --count 4 --apply
 ```
+
+`--apply` writes Claude's lines into RULES files 3–7. Without it the
+round still generates, scores, and prints drafts. `npm run train-ruleset`
+is the same command.

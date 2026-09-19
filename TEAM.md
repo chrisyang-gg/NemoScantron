@@ -28,10 +28,12 @@ decision out.
 
 ## Person C — Developer training
 
-**Owns:** the red team that generates schema-shaped fraud. Not a page.
+**Owns:** the red-team CLI. Not a page.
 
 | File | Why it exists |
 | --- | --- |
-| `src/lib/red-team/` | Synthetic fraud cases |
-| `src/app/api/train-ruleset/route.ts` | Training endpoint |
-| `scripts/train-ruleset.mjs` | `npm run train-ruleset` |
+| `scripts/red-team.ts` | `npm run red-team -- --count N` |
+| `src/lib/red-team/` | One-at-a-time Nemotron case generation |
+| `src/lib/claude/` | Claude ruleset trainer |
+| `src/lib/feedback/train-ruleset.ts` | Generate → score → implicated RULES only |
+| `src/app/api/train-ruleset/route.ts` | Optional HTTP wrapper |

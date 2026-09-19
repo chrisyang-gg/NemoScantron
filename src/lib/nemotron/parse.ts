@@ -34,6 +34,16 @@ export function isRawJsonParseError(error: unknown): boolean {
   return /JSON|Expected|Unexpected|position \d+/i.test(message);
 }
 
+export function parseModelJson(raw: string): unknown {
+  const cleaned = raw.trim().replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "");
+  const startObj = cleaned.indexOf("{");
+  const startArr = cleaned.indexOf("[");
+  const start =
+    startArr >= 0 && (startObj < 0 || startArr < startObj) ? startArr : startObj;
+  if (start < 0) return undefined;
+  return tryParseJson(cleaned.slice(start));
+}
+
 function tryParseJson(text: string): unknown {
   const attempts = [text, stripTrailingCommas(text), repairLooseJson(text)];
   for (const attempt of attempts) {

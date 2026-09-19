@@ -1,68 +1,113 @@
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { completeJson } from "@/lib/ai/engine";
+import { callClaude, claudeStatus } from "@/lib/claude/call";
+import { excerptRulesFile } from "@/lib/feedback/excerpt";
+import { nemotronStatus } from "@/lib/nemotron/call";
 import { runAnalyze } from "@/lib/nemotron/run-analyze";
+import { parseModelJson } from "@/lib/nemotron/parse";
 import type { NemotronAnalysis } from "@/lib/nemotron/types";
-import { generateFraudBatch, type GeneratedCase } from "@/lib/red-team/generate";
+import { caseNeedsAttention, clampTestCount, keysNeedingAttention } from "@/lib/red-team/categories";
+import { generateOneCase, type GeneratedCase } from "@/lib/red-team/generate-one";
+import { GENERATION_SLOTS } from "@/lib/red-team/schema-brief";
+import { compactRecord, stripGoldForScoring } from "@/lib/red-team/strip-gold";
 import { IMMUTABLE_FILES, MUTABLE_FILE_BY_KEY, type MutableKey } from "@/lib/ruleset/order";
 import { RULESET_DIR } from "@/lib/ruleset/assemble";
+
+export type TrainProgress =
+  | { phase: "start"; round: number; total: number }
+  | { phase: "generating"; index: number; total: number; family: string; difficulty: string }
+  | { phase: "created"; index: number; total: number; generated: GeneratedCase }
+  | { phase: "scoring"; index: number; total: number; id: string }
+  | { phase: "scored"; index: number; total: number; row: TrainRound["cases"][number] }
+  | { phase: "claude"; files: string[] }
+  | { phase: "done"; result: TrainRound };
 
 export type TrainRound = {
   round: number;
   apply: boolean;
+  dir: string;
   cases: {
+    id: string;
     family: string;
+    difficulty: string;
     expectedFraud: boolean;
+    expectedDecision: string;
+    description: string;
+    trick: string;
     decision: string;
     risk_score: number;
     caught: boolean;
+    needsAttention: boolean;
   }[];
   catchRate: number;
   falsePositiveRate: number;
   missed: string[];
+  implicated: MutableKey[];
   changes: { file: string; applied: boolean; note: string }[];
-  engine: string;
+  engines: { generate: string; score: string; trainer: string };
 };
 
 const STATE_PATH = join(process.cwd(), "ruleset", ".train-state.json");
 
-export async function runTrainingRound(options: {
-  apply?: boolean;
-  count?: number;
-} = {}): Promise<TrainRound> {
+export async function runTrainingRound(
+  options: {
+    apply?: boolean;
+    count?: number;
+    onProgress?: (event: TrainProgress) => void;
+  } = {},
+): Promise<TrainRound> {
   const apply = Boolean(options.apply);
-  const batch = generateFraudBatch(options.count ?? 4);
-  const analyses: { generated: GeneratedCase; analysis: NemotronAnalysis }[] = [];
-  let engine = "nvidia-nemotron";
+  const total = clampTestCount(options.count);
+  const emit = options.onProgress ?? (() => undefined);
+  const round = nextRound();
+  const dir = join(process.cwd(), "fixtures", "red-team", "rounds", `round-${String(round).padStart(3, "0")}`);
+  mkdirSync(dir, { recursive: true });
+  emit({ phase: "start", round, total });
 
-  for (const generated of batch) {
+  const generated: GeneratedCase[] = [];
+  for (let index = 1; index <= total; index += 1) {
+    const slot = GENERATION_SLOTS[(index - 1) % GENERATION_SLOTS.length];
+    emit({
+      phase: "generating",
+      index,
+      total,
+      family: slot.family,
+      difficulty: slot.difficulty,
+    });
+    const next = await generateOneCase({
+      index,
+      total,
+      usedIds: generated.map((item) => item.id),
+    });
+    generated.push(next);
+    writeFileSync(join(dir, `case-${String(index).padStart(2, "0")}.json`), JSON.stringify(next, null, 2));
+    writeManifest(dir, generated, []);
+    emit({ phase: "created", index, total, generated: next });
+  }
+
+  const analyses: { generated: GeneratedCase; analysis: NemotronAnalysis }[] = [];
+  let scoreEngine = "nvidia-nemotron";
+  for (const item of generated) {
+    emit({ phase: "scoring", index: item.index, total, id: item.id });
     const result = await runAnalyze({
-      notes: `Red-team family ${generated.family}. Expected fraud=${generated.expectedFraud}.`,
+      notes: null,
       file: {
-        name: `${generated.family}.json`,
-        text: JSON.stringify(generated.record),
+        name: `${item.family}.json`,
+        text: JSON.stringify(stripGoldForScoring(item.record)),
         mime: "application/json",
       },
     });
-    if (!result.ok) {
-      throw new Error(result.error);
-    }
-    engine = result.engine;
-    analyses.push({ generated, analysis: result.analyses[0] });
+    if (!result.ok) throw new Error(result.error);
+    const analysis = result.analyses[0];
+    if (!analysis) throw new Error(`Nemotron returned no analysis for ${item.id}.`);
+    scoreEngine = result.engine;
+    analyses.push({ generated: item, analysis });
+    const row = toRow(item, analysis);
+    writeManifest(dir, generated, analyses);
+    emit({ phase: "scored", index: item.index, total, row });
   }
 
-  const cases = analyses.map(({ generated, analysis }) => {
-    const severe = analysis.decision === "hold" || analysis.decision === "decline";
-    const flagged = analysis.decision !== "approve";
-    return {
-      family: generated.family,
-      expectedFraud: generated.expectedFraud,
-      decision: analysis.decision,
-      risk_score: analysis.risk_score,
-      caught: generated.expectedFraud ? flagged : !severe,
-    };
-  });
-
+  const cases = analyses.map(({ generated: item, analysis }) => toRow(item, analysis));
   const fraud = cases.filter((item) => item.expectedFraud);
   const clean = cases.filter((item) => !item.expectedFraud);
   const catchRate = fraud.length
@@ -72,54 +117,112 @@ export async function runTrainingRound(options: {
     ? Math.round((100 * clean.filter((item) => !item.caught).length) / clean.length)
     : 0;
   const missed = fraud.filter((item) => !item.caught).map((item) => item.family);
+  const attentionCases = analyses.filter(({ generated: item, analysis }) =>
+    caseNeedsAttention({
+      expectedFraud: item.expectedFraud,
+      expectedDecision: item.expectedDecision,
+      analysis,
+    }),
+  );
+  const implicated = uniqueKeys(
+    attentionCases.flatMap(({ generated: item, analysis }) =>
+      keysNeedingAttention({
+        family: item.family,
+        goldCategories: item.categories,
+        expectedFraud: item.expectedFraud,
+        expectedDecision: item.expectedDecision,
+        analysis,
+      }),
+    ),
+  );
 
-  const round = nextRound();
-  const changes = await proposeChanges({
+  let changes: TrainRound["changes"] = [];
+  const trainer = claudeStatus().label;
+  if (!attentionCases.length) {
+    changes = [{ file: "(none)", applied: false, note: "Scorer matched Nemotron gold on every case. No RULES file sent to Claude." }];
+  } else {
+    emit({ phase: "claude", files: implicated.map((key) => MUTABLE_FILE_BY_KEY[key]) });
+    changes = await proposeWithClaude({
+      round,
+      apply,
+      catchRate,
+      falsePositiveRate,
+      missed,
+      implicated,
+      analyses: attentionCases,
+    });
+  }
+
+  const result: TrainRound = {
     round,
     apply,
+    dir,
+    cases,
     catchRate,
     falsePositiveRate,
     missed,
-    analyses,
-  });
-
+    implicated,
+    changes,
+    engines: {
+      generate: nemotronStatus().label,
+      score: scoreEngine,
+      trainer,
+    },
+  };
+  writeFileSync(join(dir, "round.json"), JSON.stringify(result, null, 2));
   if (apply) writeRound(round);
-  return { round, apply, cases, catchRate, falsePositiveRate, missed, changes, engine };
+  emit({ phase: "done", result });
+  return result;
 }
 
-async function proposeChanges(args: {
+function toRow(generated: GeneratedCase, analysis: NemotronAnalysis): TrainRound["cases"][number] {
+  const severe = analysis.decision === "hold" || analysis.decision === "decline";
+  const flagged = analysis.decision !== "approve";
+  return {
+    id: generated.id,
+    family: generated.family,
+    difficulty: generated.difficulty,
+    expectedFraud: generated.expectedFraud,
+    expectedDecision: generated.expectedDecision,
+    description: generated.description,
+    trick: generated.trick,
+    decision: analysis.decision,
+    risk_score: analysis.risk_score,
+    caught: generated.expectedFraud ? flagged : !severe,
+    needsAttention: caseNeedsAttention({
+      expectedFraud: generated.expectedFraud,
+      expectedDecision: generated.expectedDecision,
+      analysis,
+    }),
+  };
+}
+
+async function proposeWithClaude(args: {
   round: number;
   apply: boolean;
   catchRate: number;
   falsePositiveRate: number;
   missed: string[];
+  implicated: MutableKey[];
   analyses: { generated: GeneratedCase; analysis: NemotronAnalysis }[];
 }): Promise<TrainRound["changes"]> {
-  const fromModel = await proposeWithModel(args);
-  if (fromModel?.length) {
-    return fromModel.map((change) => applyMutableChange(change, args.apply));
+  if (!args.implicated.length) {
+    return [{ file: "(none)", applied: false, note: "No implicated RULES files." }];
   }
-  return [applyLocalHeuristic(args)];
-}
 
-async function proposeWithModel(args: {
-  round: number;
-  catchRate: number;
-  falsePositiveRate: number;
-  missed: string[];
-  analyses: { generated: GeneratedCase; analysis: NemotronAnalysis }[];
-}): Promise<{ key: MutableKey; entry: string; summary: string }[] | null> {
-  const mutableText = Object.fromEntries(
-    (Object.entries(MUTABLE_FILE_BY_KEY) as [MutableKey, string][]).map(([key, file]) => [
-      key,
-      readFileSync(join(RULESET_DIR, file), "utf8"),
-    ]),
+  const hints = args.analyses.flatMap(({ generated, analysis }) => [
+    generated.family,
+    ...generated.categories,
+    ...analysis.rules_triggered,
+    ...analysis.patterns_matched,
+  ]);
+  const excerpts = Object.fromEntries(
+    args.implicated.map((key) => [key, excerptRulesFile(key, hints)]),
   );
-  const result = await completeJson<{
-    updates?: { key?: MutableKey; entry?: string; summary?: string }[];
-  }>({
+
+  const reply = await callClaude({
     system:
-      "You are the NemoScantron ruleset trainer. After a red-team round, propose append-only adjustments to MUTABLE rules files 3–7. Never touch CORE files. Return JSON { updates: [{ key, entry, summary }] }. key must be one of velocity_behavioral, geo_device, merchant_auth, attack_patterns, thresholds. entry is one learned-adjustment line.",
+      "You refine a credit-card fraud RULES pack. CORE files are immutable. Edit only the implicated RULES files you were given. Append at most one learned-adjustment line per file. Do not rewrite whole files. Return JSON { updates: [{ key, entry, summary }] }. key must be one of the implicated keys. entry is one line: [ROUND N | rule_or_pattern | change | rationale].",
     user: JSON.stringify(
       {
         round: args.round,
@@ -127,55 +230,48 @@ async function proposeWithModel(args: {
         falsePositiveRate: args.falsePositiveRate,
         missed: args.missed,
         immutableFiles: IMMUTABLE_FILES,
-        results: args.analyses.map((item) => ({
-          family: item.generated.family,
-          expectedFraud: item.generated.expectedFraud,
-          decision: item.analysis.decision,
-          risk_score: item.analysis.risk_score,
-          rules: item.analysis.rules_triggered,
-          patterns: item.analysis.patterns_matched,
-          reasoning: item.analysis.reasoning,
+        implicated: args.implicated,
+        cases: args.analyses.map(({ generated, analysis }) => ({
+          family: generated.family,
+          difficulty: generated.difficulty,
+          gold_fraud: generated.expectedFraud,
+          gold_decision: generated.expectedDecision,
+          description: generated.description,
+          trick: generated.trick,
+          scored_decision: analysis.decision,
+          risk_score: analysis.risk_score,
+          rules: analysis.rules_triggered,
+          patterns: analysis.patterns_matched,
+          reasoning: analysis.reasoning.slice(0, 280),
+          record: compactRecord(generated.record),
         })),
-        currentRules: Object.fromEntries(
-          Object.entries(mutableText).map(([key, text]) => [key, text.slice(0, 1800)]),
-        ),
+        rulesExcerpts: excerpts,
       },
       null,
       2,
     ),
+    maxTokens: 1400,
   });
-  const updates = result?.data.updates?.filter(
-    (item) => item.key && item.entry && item.key in MUTABLE_FILE_BY_KEY,
-  );
-  if (!updates?.length) return null;
-  return updates.map((item) => ({
-    key: item.key as MutableKey,
-    entry: String(item.entry),
-    summary: String(item.summary ?? item.entry),
-  }));
-}
 
-function applyLocalHeuristic(args: {
-  round: number;
-  apply: boolean;
-  catchRate: number;
-  missed: string[];
-}): TrainRound["changes"][number] {
-  const key: MutableKey = args.missed.includes("geo-impossible-travel")
-    ? "geo_device"
-    : args.missed.includes("card-testing")
-      ? "velocity_behavioral"
-      : args.missed.includes("merchant-collusion")
-        ? "merchant_auth"
-        : args.missed.length
-          ? "attack_patterns"
-          : "thresholds";
-  const entry = `[ROUND ${args.round} | ${args.missed[0] ?? "none"} | catch ${args.catchRate}% | ${
-    args.missed.length
-      ? `tighten coverage for ${args.missed.join(", ")}`
-      : "no missed fraud families this round"
-  }]`;
-  return applyMutableChange({ key, entry, summary: entry }, args.apply);
+  if (!reply.ok) {
+    return [{ file: "(claude)", applied: false, note: reply.error }];
+  }
+
+  const parsed = parseModelJson(reply.text);
+  const updates = isRecord(parsed) && Array.isArray(parsed.updates) ? parsed.updates : [];
+  const usable = updates
+    .map((item) => {
+      if (!isRecord(item)) return null;
+      const key = String(item.key ?? "") as MutableKey;
+      if (!args.implicated.includes(key) || !item.entry) return null;
+      return { key, entry: String(item.entry), summary: String(item.summary ?? item.entry) };
+    })
+    .filter((item): item is { key: MutableKey; entry: string; summary: string } => Boolean(item));
+
+  if (!usable.length) {
+    return [{ file: "(claude)", applied: false, note: "Claude returned no usable RULES updates." }];
+  }
+  return usable.map((change) => applyMutableChange(change, args.apply));
 }
 
 function applyMutableChange(
@@ -209,13 +305,44 @@ function bumpMetadata(text: string, summary: string): string {
 }
 
 function appendLearning(text: string, entry: string): string {
-  const marker = "— No learnings recorded yet. Round 0 baseline. —";
-  const thresholdMarker = "— No threshold adjustments recorded yet. Round 0 baseline. —";
-  const patternMarker = "— No learned patterns recorded yet. Round 0 baseline. —";
-  if (text.includes(marker)) return text.replace(marker, entry);
-  if (text.includes(thresholdMarker)) return text.replace(thresholdMarker, entry);
-  if (text.includes(patternMarker)) return text.replace(patternMarker, entry);
+  const markers = [
+    "— No learnings recorded yet. Round 0 baseline. —",
+    "— No threshold adjustments recorded yet. Round 0 baseline. —",
+    "— No learned patterns recorded yet. Round 0 baseline. —",
+  ];
+  for (const marker of markers) {
+    if (text.includes(marker)) return text.replace(marker, entry);
+  }
   return `${text.trimEnd()}\n\n  ${entry}\n`;
+}
+
+function writeManifest(
+  dir: string,
+  generated: GeneratedCase[],
+  analyses: { generated: GeneratedCase; analysis: NemotronAnalysis }[],
+) {
+  writeFileSync(
+    join(dir, "manifest.json"),
+    JSON.stringify(
+      {
+        created: generated.map((item) => ({
+          index: item.index,
+          id: item.id,
+          family: item.family,
+          difficulty: item.difficulty,
+          expectedFraud: item.expectedFraud,
+          expectedDecision: item.expectedDecision,
+        })),
+        scored: analyses.map(({ generated, analysis }) => ({
+          id: generated.id,
+          decision: analysis.decision,
+          risk_score: analysis.risk_score,
+        })),
+      },
+      null,
+      2,
+    ),
+  );
 }
 
 function nextRound(): number {
@@ -230,4 +357,12 @@ function nextRound(): number {
 function writeRound(round: number) {
   mkdirSync(RULESET_DIR, { recursive: true });
   writeFileSync(STATE_PATH, JSON.stringify({ round }, null, 2));
+}
+
+function uniqueKeys(keys: MutableKey[]): MutableKey[] {
+  return [...new Set(keys)];
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
 }

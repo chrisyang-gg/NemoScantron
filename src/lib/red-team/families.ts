@@ -1,3 +1,5 @@
+import type { MutableKey } from "@/lib/ruleset/order";
+
 export const RED_TEAM_FAMILIES = [
   "geo-impossible-travel",
   "card-testing",
@@ -10,6 +12,17 @@ export const RED_TEAM_FAMILIES = [
 ] as const;
 
 export type RedTeamFamily = (typeof RED_TEAM_FAMILIES)[number];
+
+export const FAMILY_CATEGORIES: Record<RedTeamFamily, MutableKey[]> = {
+  "geo-impossible-travel": ["geo_device", "attack_patterns"],
+  "card-testing": ["velocity_behavioral", "merchant_auth", "attack_patterns"],
+  "account-takeover": ["geo_device", "merchant_auth", "attack_patterns"],
+  "synthetic-identity": ["velocity_behavioral", "attack_patterns"],
+  "cnp-stolen-card": ["merchant_auth", "attack_patterns"],
+  "low-and-slow": ["velocity_behavioral", "thresholds", "attack_patterns"],
+  "merchant-collusion": ["merchant_auth", "attack_patterns"],
+  clean: ["thresholds"],
+};
 
 export const FAMILY_SPEC: Record<
   RedTeamFamily,
