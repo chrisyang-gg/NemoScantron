@@ -1,0 +1,10 @@
+Hello accounts payable,
+
+Our banking was updated this morning. Do not use the old account.
+Please send invoice #4412 as a wire instead to this new account.
+
+Updated banking details:
+Routing 021000021
+Account 9988776611
+
+We need this processed today so we can release shipment.
