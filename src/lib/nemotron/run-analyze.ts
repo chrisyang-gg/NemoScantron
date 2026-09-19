@@ -1,6 +1,6 @@
 import { assemblePrompt } from "@/lib/ruleset/assemble";
 import { callNemotron, nemotronStatus } from "@/lib/nemotron/call";
-import { parseNemotronOutput } from "@/lib/nemotron/parse";
+import { isRawJsonParseError, parseNemotronOutput } from "@/lib/nemotron/parse";
 import { prepareRecords, type AnalyzeInput } from "@/lib/nemotron/intake";
 import type { AnalyzeResponse } from "@/lib/nemotron/types";
 
@@ -20,11 +20,12 @@ export async function runAnalyze(input: AnalyzeInput): Promise<AnalyzeResponse> 
 
   try {
     const prompt = assemblePrompt(intake.records, intake.notes);
-    const raw = await callNemotron(prompt);
-    if (!raw.ok) return raw;
+    const first = await callNemotron(prompt);
+    if (!first.ok) return first;
+    const analyses = await parseOrRetry(first.text, prompt);
     return {
       ok: true,
-      analyses: parseNemotronOutput(raw.text),
+      analyses,
       engine: status.label,
       droppedFields: intake.dropped,
       filename: intake.filename,
@@ -32,7 +33,23 @@ export async function runAnalyze(input: AnalyzeInput): Promise<AnalyzeResponse> 
   } catch (error) {
     return {
       ok: false,
-      error: error instanceof Error ? error.message : "Nemotron request failed.",
+      error: isRawJsonParseError(error)
+        ? "Nemotron returned a broken JSON score. Submit again — long histories sometimes get cut off."
+        : error instanceof Error
+          ? error.message
+          : "Nemotron request failed.",
     };
+  }
+}
+
+async function parseOrRetry(text: string, prompt: string) {
+  try {
+    return parseNemotronOutput(text);
+  } catch {
+    const retry = await callNemotron(
+      `${prompt}\n\nThe previous reply was not valid JSON. Return only a complete FILE 8 JSON object or array. No markdown, no trailing commas, no comments, no ellipses.`,
+    );
+    if (!retry.ok) throw new Error(retry.error);
+    return parseNemotronOutput(retry.text);
   }
 }

@@ -33,6 +33,9 @@ export function assemblePrompt(
       : JSON.stringify(transactionData, null, 2);
 
   parts.push(`=== TRANSACTION DATA START ===\n${dataStr}\n=== TRANSACTION DATA END ===`);
+  parts.push(
+    "Return only FILE 8 JSON: one object for a single record, an array for several. Escape every double quote inside strings. Do not copy risk_assessment.nemotron_explanation.",
+  );
   return parts.join("\n\n");
 }
 

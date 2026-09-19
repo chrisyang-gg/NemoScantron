@@ -61,6 +61,9 @@ Only `.json` files. Each record is projected onto
 `src/lib/data/credit-card-transaction.schema.json`.
 
 `fixtures/lagos-impossible-travel.json` is a full high-risk sample.
+`fixtures/histories/03_card_testing_history_high_risk.json` is a five-transaction
+card-testing history. Long replies from Nemotron are repaired before they reach
+the page, so a cut-off or inner-quote score should not surface a raw V8 JSON error.
 
 ## Red-team training
 

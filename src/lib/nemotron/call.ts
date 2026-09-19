@@ -35,14 +35,14 @@ export async function callNemotron(
       model: status.model,
       temperature: 0.1,
       top_p: 0.95,
-      max_tokens: 4096,
+      max_tokens: 8192,
       stream: false,
       chat_template_kwargs: { enable_thinking: false },
       messages: [
         {
           role: "system",
           content:
-            "You are Nemotron scoring credit-card fraud. Follow the assembled ruleset exactly. Read every CORE and RULES file, then the optional user context, then the transaction JSON. Execute the ten-step workflow. Reply with one FILE 8 JSON object or array only — no markdown fences, no preamble.",
+            "You are Nemotron scoring credit-card fraud. Follow the assembled ruleset exactly. Read every CORE and RULES file, then the optional user context, then the transaction JSON. Execute the ten-step workflow. Reply with one FILE 8 JSON object or array only — no markdown fences, no preamble. Escape every double quote inside string values. Keep reasoning to two short sentences when scoring more than one record.",
         },
         { role: "user", content: prompt },
       ],

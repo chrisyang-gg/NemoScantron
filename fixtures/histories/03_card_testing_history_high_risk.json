@@ -1,0 +1,527 @@
+{
+  "scenario_id": "03_card_testing_history_high_risk",
+  "transaction_count": 5,
+  "transactions": [
+    {
+      "transaction_id": "03_card_testing_history_high_risk_txn_001",
+      "timestamp": "2026-09-19T14:10:00Z",
+      "amount": 18.42,
+      "currency": "USD",
+      "transaction_type": "purchase",
+      "channel": "card_present",
+      "entry_mode": "contactless_tap",
+      "card": {
+        "card_id_token": "card_03_card_testing_history_high_risk",
+        "bin": "414720",
+        "last_four": "6631",
+        "network": "Visa",
+        "card_type": "credit",
+        "product_tier": "rewards",
+        "issuing_bank": "Chase",
+        "expiration_month": 11,
+        "expiration_year": 2029,
+        "card_present": true,
+        "card_activated_days_ago": 500,
+        "is_virtual_card": false
+      },
+      "account": {
+        "account_id_token": "acct_03_card_testing_history_high_risk",
+        "account_open_date": "2023-02-14",
+        "credit_limit": 8000.0,
+        "available_credit": 6000.0,
+        "current_balance": 2000.0,
+        "account_status": "active",
+        "billing_zip": "15213",
+        "billing_country": "US",
+        "risk_tier": "low"
+      },
+      "merchant": {
+        "merchant_id_token": "merch_tok_test01",
+        "merchant_name": "Campus Cafe",
+        "mcc_code": "5812",
+        "merchant_category": "Restaurants",
+        "merchant_city": "Pittsburgh",
+        "merchant_state": "PA",
+        "merchant_country": "US",
+        "acquirer_id_token": "acq_tok_11",
+        "merchant_risk_score": 0.03,
+        "is_first_time_merchant_for_cardholder": false
+      },
+      "location": {
+        "transaction_city": "Pittsburgh",
+        "transaction_state": "PA",
+        "transaction_country": "US",
+        "latitude": 40.4406,
+        "longitude": -79.9959,
+        "distance_from_home_km": 3.0,
+        "distance_from_last_transaction_km": 3.0,
+        "time_since_last_transaction_minutes": 720,
+        "ip_address_hash": "a83f...c19e",
+        "ip_country": "US",
+        "device_id_token": "dev_tok_home_01",
+        "device_type": "pos_terminal",
+        "is_known_device_for_account": true
+      },
+      "authentication": {
+        "cvv_result": "match",
+        "avs_result": "full_match",
+        "pin_verified": false,
+        "three_ds_authenticated": false,
+        "otp_verified": false,
+        "biometric_verified": false
+      },
+      "velocity_features": {
+        "transactions_last_1h": 1,
+        "transactions_last_24h": 3,
+        "amount_sum_last_24h": 100.0,
+        "distinct_merchants_last_24h": 3,
+        "distinct_countries_last_24h": 1,
+        "avg_transaction_amount_90d": 40.0,
+        "std_transaction_amount_90d": 20.0,
+        "declined_attempts_last_1h": 0
+      },
+      "processing": {
+        "authorization_code_token": "auth_tok_7f21",
+        "response_code": "approved",
+        "processor": "Visa Net",
+        "processing_time_ms": 340,
+        "network_transaction_id_token": "netx_tok_9931"
+      },
+      "risk_assessment": {
+        "model_risk_score": 0.02,
+        "rules_triggered": [],
+        "decision": "approve",
+        "nemotron_explanation": "Small restaurant purchase at a familiar local merchant on a known device; amount and location match normal behavior.",
+        "analyst_reviewed": false,
+        "analyst_decision": null
+      },
+      "label": {
+        "is_fraud": false,
+        "fraud_type": null,
+        "confirmed_by": "none",
+        "chargeback_filed": false
+      },
+      "source": "red_team_synthetic"
+    },
+    {
+      "transaction_id": "03_card_testing_history_high_risk_txn_002",
+      "timestamp": "2026-09-19T20:01:00Z",
+      "amount": 1.0,
+      "currency": "USD",
+      "transaction_type": "purchase",
+      "channel": "online",
+      "entry_mode": "online_keyed",
+      "card": {
+        "card_id_token": "card_03_card_testing_history_high_risk",
+        "bin": "414720",
+        "last_four": "6631",
+        "network": "Visa",
+        "card_type": "credit",
+        "product_tier": "rewards",
+        "issuing_bank": "Chase",
+        "expiration_month": 11,
+        "expiration_year": 2029,
+        "card_present": false,
+        "card_activated_days_ago": 500,
+        "is_virtual_card": false
+      },
+      "account": {
+        "account_id_token": "acct_03_card_testing_history_high_risk",
+        "account_open_date": "2023-02-14",
+        "credit_limit": 8000.0,
+        "available_credit": 6000.0,
+        "current_balance": 2000.0,
+        "account_status": "active",
+        "billing_zip": "15213",
+        "billing_country": "US",
+        "risk_tier": "low"
+      },
+      "merchant": {
+        "merchant_id_token": "merch_tok_test01",
+        "merchant_name": "MicroCharge Services",
+        "mcc_code": "5999",
+        "merchant_category": "Miscellaneous Retail",
+        "merchant_city": "Wilmington",
+        "merchant_state": "DE",
+        "merchant_country": "US",
+        "acquirer_id_token": "acq_tok_11",
+        "merchant_risk_score": 0.48,
+        "is_first_time_merchant_for_cardholder": true
+      },
+      "location": {
+        "transaction_city": "Wilmington",
+        "transaction_state": "DE",
+        "transaction_country": "US",
+        "latitude": 40.4406,
+        "longitude": -79.9959,
+        "distance_from_home_km": 4300.0,
+        "distance_from_last_transaction_km": 0.0,
+        "time_since_last_transaction_minutes": 1,
+        "ip_address_hash": "a83f...c19e",
+        "ip_country": "US",
+        "device_id_token": "dev_tok_home_01",
+        "device_type": "desktop",
+        "is_known_device_for_account": false
+      },
+      "authentication": {
+        "cvv_result": "no_match",
+        "avs_result": "no_match",
+        "pin_verified": false,
+        "three_ds_authenticated": false,
+        "otp_verified": false,
+        "biometric_verified": false
+      },
+      "velocity_features": {
+        "transactions_last_1h": 7,
+        "transactions_last_24h": 7,
+        "amount_sum_last_24h": 7.0,
+        "distinct_merchants_last_24h": 1,
+        "distinct_countries_last_24h": 1,
+        "avg_transaction_amount_90d": 160.0,
+        "std_transaction_amount_90d": 90.0,
+        "declined_attempts_last_1h": 4
+      },
+      "processing": {
+        "authorization_code_token": "auth_tok_7f21",
+        "response_code": "declined_suspected_fraud",
+        "processor": "Visa Net",
+        "processing_time_ms": 340,
+        "network_transaction_id_token": "netx_tok_9931"
+      },
+      "risk_assessment": {
+        "model_risk_score": 0.94,
+        "rules_triggered": [
+          "card_testing_burst",
+          "cvv_mismatch",
+          "unknown_device"
+        ],
+        "decision": "decline",
+        "nemotron_explanation": "Multiple small authorization attempts, repeated CVV failures, and an unknown device indicate possible card testing.",
+        "analyst_reviewed": true,
+        "analyst_decision": "confirmed_fraud"
+      },
+      "label": {
+        "is_fraud": true,
+        "fraud_type": "card_testing",
+        "confirmed_by": "red_team",
+        "chargeback_filed": false
+      },
+      "source": "red_team_synthetic"
+    },
+    {
+      "transaction_id": "03_card_testing_history_high_risk_txn_003",
+      "timestamp": "2026-09-19T20:04:00Z",
+      "amount": 1.0,
+      "currency": "USD",
+      "transaction_type": "purchase",
+      "channel": "online",
+      "entry_mode": "online_keyed",
+      "card": {
+        "card_id_token": "card_03_card_testing_history_high_risk",
+        "bin": "414720",
+        "last_four": "6631",
+        "network": "Visa",
+        "card_type": "credit",
+        "product_tier": "rewards",
+        "issuing_bank": "Chase",
+        "expiration_month": 11,
+        "expiration_year": 2029,
+        "card_present": false,
+        "card_activated_days_ago": 500,
+        "is_virtual_card": false
+      },
+      "account": {
+        "account_id_token": "acct_03_card_testing_history_high_risk",
+        "account_open_date": "2023-02-14",
+        "credit_limit": 8000.0,
+        "available_credit": 6000.0,
+        "current_balance": 2000.0,
+        "account_status": "active",
+        "billing_zip": "15213",
+        "billing_country": "US",
+        "risk_tier": "low"
+      },
+      "merchant": {
+        "merchant_id_token": "merch_tok_test01",
+        "merchant_name": "MicroCharge Services",
+        "mcc_code": "5999",
+        "merchant_category": "Miscellaneous Retail",
+        "merchant_city": "Wilmington",
+        "merchant_state": "DE",
+        "merchant_country": "US",
+        "acquirer_id_token": "acq_tok_11",
+        "merchant_risk_score": 0.48,
+        "is_first_time_merchant_for_cardholder": true
+      },
+      "location": {
+        "transaction_city": "Wilmington",
+        "transaction_state": "DE",
+        "transaction_country": "US",
+        "latitude": 40.4406,
+        "longitude": -79.9959,
+        "distance_from_home_km": 4300.0,
+        "distance_from_last_transaction_km": 0.0,
+        "time_since_last_transaction_minutes": 4,
+        "ip_address_hash": "a83f...c19e",
+        "ip_country": "US",
+        "device_id_token": "dev_tok_home_01",
+        "device_type": "desktop",
+        "is_known_device_for_account": false
+      },
+      "authentication": {
+        "cvv_result": "match",
+        "avs_result": "no_match",
+        "pin_verified": false,
+        "three_ds_authenticated": false,
+        "otp_verified": false,
+        "biometric_verified": false
+      },
+      "velocity_features": {
+        "transactions_last_1h": 9,
+        "transactions_last_24h": 9,
+        "amount_sum_last_24h": 9.0,
+        "distinct_merchants_last_24h": 1,
+        "distinct_countries_last_24h": 1,
+        "avg_transaction_amount_90d": 160.0,
+        "std_transaction_amount_90d": 90.0,
+        "declined_attempts_last_1h": 5
+      },
+      "processing": {
+        "authorization_code_token": "auth_tok_7f21",
+        "response_code": "declined_suspected_fraud",
+        "processor": "Visa Net",
+        "processing_time_ms": 340,
+        "network_transaction_id_token": "netx_tok_9931"
+      },
+      "risk_assessment": {
+        "model_risk_score": 0.96,
+        "rules_triggered": [
+          "card_testing_burst",
+          "unknown_device",
+          "velocity_spike"
+        ],
+        "decision": "decline",
+        "nemotron_explanation": "A successful small authorization immediately after multiple failed attempts increases concern that stolen card credentials are being tested.",
+        "analyst_reviewed": true,
+        "analyst_decision": "confirmed_fraud"
+      },
+      "label": {
+        "is_fraud": true,
+        "fraud_type": "card_testing",
+        "confirmed_by": "red_team",
+        "chargeback_filed": false
+      },
+      "source": "red_team_synthetic"
+    },
+    {
+      "transaction_id": "03_card_testing_history_high_risk_txn_004",
+      "timestamp": "2026-09-19T20:01:00Z",
+      "amount": 1.0,
+      "currency": "USD",
+      "transaction_type": "purchase",
+      "channel": "online",
+      "entry_mode": "online_keyed",
+      "card": {
+        "card_id_token": "card_03_card_testing_history_high_risk",
+        "bin": "414720",
+        "last_four": "6631",
+        "network": "Visa",
+        "card_type": "credit",
+        "product_tier": "rewards",
+        "issuing_bank": "Chase",
+        "expiration_month": 11,
+        "expiration_year": 2029,
+        "card_present": false,
+        "card_activated_days_ago": 500,
+        "is_virtual_card": false
+      },
+      "account": {
+        "account_id_token": "acct_03_card_testing_history_high_risk",
+        "account_open_date": "2023-02-14",
+        "credit_limit": 8000.0,
+        "available_credit": 6000.0,
+        "current_balance": 2000.0,
+        "account_status": "active",
+        "billing_zip": "15213",
+        "billing_country": "US",
+        "risk_tier": "low"
+      },
+      "merchant": {
+        "merchant_id_token": "merch_tok_test01",
+        "merchant_name": "MicroCharge Services",
+        "mcc_code": "5999",
+        "merchant_category": "Miscellaneous Retail",
+        "merchant_city": "Wilmington",
+        "merchant_state": "DE",
+        "merchant_country": "US",
+        "acquirer_id_token": "acq_tok_11",
+        "merchant_risk_score": 0.48,
+        "is_first_time_merchant_for_cardholder": true
+      },
+      "location": {
+        "transaction_city": "Wilmington",
+        "transaction_state": "DE",
+        "transaction_country": "US",
+        "latitude": 40.4406,
+        "longitude": -79.9959,
+        "distance_from_home_km": 4300.0,
+        "distance_from_last_transaction_km": 0.0,
+        "time_since_last_transaction_minutes": 1,
+        "ip_address_hash": "a83f...c19e",
+        "ip_country": "US",
+        "device_id_token": "dev_tok_home_01",
+        "device_type": "desktop",
+        "is_known_device_for_account": false
+      },
+      "authentication": {
+        "cvv_result": "no_match",
+        "avs_result": "no_match",
+        "pin_verified": false,
+        "three_ds_authenticated": false,
+        "otp_verified": false,
+        "biometric_verified": false
+      },
+      "velocity_features": {
+        "transactions_last_1h": 7,
+        "transactions_last_24h": 7,
+        "amount_sum_last_24h": 7.0,
+        "distinct_merchants_last_24h": 1,
+        "distinct_countries_last_24h": 1,
+        "avg_transaction_amount_90d": 160.0,
+        "std_transaction_amount_90d": 90.0,
+        "declined_attempts_last_1h": 4
+      },
+      "processing": {
+        "authorization_code_token": "auth_tok_7f21",
+        "response_code": "declined_suspected_fraud",
+        "processor": "Visa Net",
+        "processing_time_ms": 340,
+        "network_transaction_id_token": "netx_tok_9931"
+      },
+      "risk_assessment": {
+        "model_risk_score": 0.94,
+        "rules_triggered": [
+          "card_testing_burst",
+          "cvv_mismatch",
+          "unknown_device"
+        ],
+        "decision": "decline",
+        "nemotron_explanation": "Multiple small authorization attempts, repeated CVV failures, and an unknown device indicate possible card testing.",
+        "analyst_reviewed": true,
+        "analyst_decision": "confirmed_fraud"
+      },
+      "label": {
+        "is_fraud": true,
+        "fraud_type": "card_testing",
+        "confirmed_by": "red_team",
+        "chargeback_filed": false
+      },
+      "source": "red_team_synthetic"
+    },
+    {
+      "transaction_id": "03_card_testing_history_high_risk_txn_005",
+      "timestamp": "2026-09-19T20:04:00Z",
+      "amount": 1.0,
+      "currency": "USD",
+      "transaction_type": "purchase",
+      "channel": "online",
+      "entry_mode": "online_keyed",
+      "card": {
+        "card_id_token": "card_03_card_testing_history_high_risk",
+        "bin": "414720",
+        "last_four": "6631",
+        "network": "Visa",
+        "card_type": "credit",
+        "product_tier": "rewards",
+        "issuing_bank": "Chase",
+        "expiration_month": 11,
+        "expiration_year": 2029,
+        "card_present": false,
+        "card_activated_days_ago": 500,
+        "is_virtual_card": false
+      },
+      "account": {
+        "account_id_token": "acct_03_card_testing_history_high_risk",
+        "account_open_date": "2023-02-14",
+        "credit_limit": 8000.0,
+        "available_credit": 6000.0,
+        "current_balance": 2000.0,
+        "account_status": "active",
+        "billing_zip": "15213",
+        "billing_country": "US",
+        "risk_tier": "low"
+      },
+      "merchant": {
+        "merchant_id_token": "merch_tok_test01",
+        "merchant_name": "MicroCharge Services",
+        "mcc_code": "5999",
+        "merchant_category": "Miscellaneous Retail",
+        "merchant_city": "Wilmington",
+        "merchant_state": "DE",
+        "merchant_country": "US",
+        "acquirer_id_token": "acq_tok_11",
+        "merchant_risk_score": 0.48,
+        "is_first_time_merchant_for_cardholder": true
+      },
+      "location": {
+        "transaction_city": "Wilmington",
+        "transaction_state": "DE",
+        "transaction_country": "US",
+        "latitude": 40.4406,
+        "longitude": -79.9959,
+        "distance_from_home_km": 4300.0,
+        "distance_from_last_transaction_km": 0.0,
+        "time_since_last_transaction_minutes": 4,
+        "ip_address_hash": "a83f...c19e",
+        "ip_country": "US",
+        "device_id_token": "dev_tok_home_01",
+        "device_type": "desktop",
+        "is_known_device_for_account": false
+      },
+      "authentication": {
+        "cvv_result": "match",
+        "avs_result": "no_match",
+        "pin_verified": false,
+        "three_ds_authenticated": false,
+        "otp_verified": false,
+        "biometric_verified": false
+      },
+      "velocity_features": {
+        "transactions_last_1h": 9,
+        "transactions_last_24h": 9,
+        "amount_sum_last_24h": 9.0,
+        "distinct_merchants_last_24h": 1,
+        "distinct_countries_last_24h": 1,
+        "avg_transaction_amount_90d": 160.0,
+        "std_transaction_amount_90d": 90.0,
+        "declined_attempts_last_1h": 5
+      },
+      "processing": {
+        "authorization_code_token": "auth_tok_7f21",
+        "response_code": "declined_suspected_fraud",
+        "processor": "Visa Net",
+        "processing_time_ms": 340,
+        "network_transaction_id_token": "netx_tok_9931"
+      },
+      "risk_assessment": {
+        "model_risk_score": 0.96,
+        "rules_triggered": [
+          "card_testing_burst",
+          "unknown_device",
+          "velocity_spike"
+        ],
+        "decision": "decline",
+        "nemotron_explanation": "A successful small authorization immediately after multiple failed attempts increases concern that stolen card credentials are being tested.",
+        "analyst_reviewed": true,
+        "analyst_decision": "confirmed_fraud"
+      },
+      "label": {
+        "is_fraud": true,
+        "fraud_type": "card_testing",
+        "confirmed_by": "red_team",
+        "chargeback_filed": false
+      },
+      "source": "red_team_synthetic"
+    }
+  ]
+}

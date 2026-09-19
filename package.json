@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "next start --port 43127 --hostname 127.0.0.1",
     "lint": "eslint",
+    "test:parse": "npx --yes tsx src/lib/nemotron/parse.test.ts",
     "train-trends": "node scripts/train-trends.mjs",
     "train-ruleset": "node scripts/train-ruleset.mjs"
   },

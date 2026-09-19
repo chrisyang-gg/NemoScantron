@@ -2,7 +2,10 @@ import {
   DECISIONS,
   type NemotronAnalysis,
   type NemotronDecision,
-} from "@/lib/nemotron/types";
+} from "./types";
+
+const BROKEN_JSON_MESSAGE =
+  "Nemotron returned a broken JSON score. Submit again — long histories sometimes get cut off.";
 
 export function parseNemotronOutput(raw: string): NemotronAnalysis[] {
   const cleaned = raw.trim().replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "");
@@ -10,15 +13,205 @@ export function parseNemotronOutput(raw: string): NemotronAnalysis[] {
   const startArr = cleaned.indexOf("[");
   const start =
     startArr >= 0 && (startObj < 0 || startArr < startObj) ? startArr : startObj;
-  const endObj = cleaned.lastIndexOf("}");
-  const endArr = cleaned.lastIndexOf("]");
-  const end = Math.max(endObj, endArr);
-  if (start < 0 || end <= start) {
+  if (start < 0) {
     throw new Error("Nemotron did not return JSON.");
   }
-  const parsed = JSON.parse(cleaned.slice(start, end + 1)) as unknown;
+
+  const sliced = cleaned.slice(start);
+  const parsed = tryParseJson(sliced);
+  if (parsed === undefined) {
+    throw new Error(BROKEN_JSON_MESSAGE);
+  }
   const list = Array.isArray(parsed) ? parsed : [parsed];
+  if (!list.length) {
+    throw new Error("Nemotron returned an empty score list.");
+  }
   return list.map(normalizeAnalysis);
+}
+
+export function isRawJsonParseError(error: unknown): boolean {
+  const message = error instanceof Error ? error.message : String(error);
+  return /JSON|Expected|Unexpected|position \d+/i.test(message);
+}
+
+function tryParseJson(text: string): unknown {
+  const attempts = [text, stripTrailingCommas(text), repairLooseJson(text)];
+  for (const attempt of attempts) {
+    const candidate = closeTruncated(attempt);
+    try {
+      return JSON.parse(candidate);
+    } catch {
+      // keep trying
+    }
+  }
+  const objects = extractObjects(repairLooseJson(text));
+  return objects.length ? objects : undefined;
+}
+
+function stripTrailingCommas(text: string): string {
+  return text.replace(/,\s*([}\]])/g, "$1");
+}
+
+/**
+ * LLM scores often break JSON with inner quotes, raw newlines, or a cut-off
+ * last object. Repair those without changing valid JSON.
+ */
+export function repairLooseJson(text: string): string {
+  let out = "";
+  let inString = false;
+  let escape = false;
+
+  for (let i = 0; i < text.length; i += 1) {
+    const ch = text[i];
+    if (!inString) {
+      if (ch === '"') {
+        inString = true;
+        out += ch;
+        continue;
+      }
+      if (ch === "/" && text[i + 1] === "/") {
+        while (i < text.length && text[i] !== "\n") i += 1;
+        continue;
+      }
+      out += ch;
+      continue;
+    }
+
+    if (escape) {
+      out += ch;
+      escape = false;
+      continue;
+    }
+    if (ch === "\\") {
+      out += ch;
+      escape = true;
+      continue;
+    }
+    if (ch === '"') {
+      if (isStructuralQuoteCloser(text, i)) {
+        inString = false;
+        out += ch;
+      } else {
+        out += '\\"';
+      }
+      continue;
+    }
+    const code = ch.charCodeAt(0);
+    if (code < 32) {
+      out += JSON.stringify(ch).slice(1, -1);
+      continue;
+    }
+    out += ch;
+  }
+
+  if (inString) out += '"';
+  return closeTruncated(stripTrailingCommas(out));
+}
+
+function isStructuralQuoteCloser(text: string, quoteIndex: number): boolean {
+  let i = quoteIndex + 1;
+  while (i < text.length && /\s/.test(text[i])) i += 1;
+  if (i >= text.length) return true;
+  return ",}]:".includes(text[i]);
+}
+
+function closeTruncated(text: string): string {
+  let inString = false;
+  let escape = false;
+  const stack: string[] = [];
+  for (const ch of text) {
+    if (inString) {
+      if (escape) {
+        escape = false;
+        continue;
+      }
+      if (ch === "\\") {
+        escape = true;
+        continue;
+      }
+      if (ch === '"') inString = false;
+      continue;
+    }
+    if (ch === '"') {
+      inString = true;
+      continue;
+    }
+    if (ch === "{") stack.push("}");
+    else if (ch === "[") stack.push("]");
+    else if (ch === "}" || ch === "]") stack.pop();
+  }
+  let out = text;
+  if (inString) out += '"';
+  while (stack.length) {
+    const closer = stack.pop();
+    out = stripTrailingCommas(out) + closer;
+  }
+  return stripTrailingCommas(out);
+}
+
+function extractObjects(text: string): Record<string, unknown>[] {
+  const out: Record<string, unknown>[] = [];
+  let i = 0;
+  while (i < text.length) {
+    if (text[i] !== "{") {
+      i += 1;
+      continue;
+    }
+    const end = matchingBrace(text, i);
+    if (end < 0) {
+      const repaired = repairLooseJson(text.slice(i));
+      try {
+        const value = JSON.parse(repaired);
+        if (value && typeof value === "object" && !Array.isArray(value)) {
+          out.push(value as Record<string, unknown>);
+        }
+      } catch {
+        // skip this fragment
+      }
+      break;
+    }
+    try {
+      const value = JSON.parse(repairLooseJson(text.slice(i, end + 1)));
+      if (value && typeof value === "object" && !Array.isArray(value)) {
+        out.push(value as Record<string, unknown>);
+      }
+    } catch {
+      // skip this fragment
+    }
+    i = end + 1;
+  }
+  return out;
+}
+
+function matchingBrace(text: string, start: number): number {
+  let depth = 0;
+  let quote: string | null = null;
+  let escape = false;
+  for (let i = start; i < text.length; i += 1) {
+    const ch = text[i];
+    if (quote) {
+      if (escape) {
+        escape = false;
+        continue;
+      }
+      if (ch === "\\") {
+        escape = true;
+        continue;
+      }
+      if (ch === quote) quote = null;
+      continue;
+    }
+    if (ch === '"' || ch === "'") {
+      quote = ch;
+      continue;
+    }
+    if (ch === "{") depth += 1;
+    if (ch === "}") {
+      depth -= 1;
+      if (depth === 0) return i;
+    }
+  }
+  return -1;
 }
 
 function normalizeAnalysis(value: unknown): NemotronAnalysis {
