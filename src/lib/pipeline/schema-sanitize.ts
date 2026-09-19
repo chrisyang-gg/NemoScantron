@@ -68,8 +68,17 @@ export function sanitizeCreditCardJson(
   for (let index = 0; index < list.records.length; index++) {
     const path = list.records.length === 1 ? "" : `[${index}]`;
     const projected = project(list.records[index], transactionSchema, path, dropped);
-    if (isRecord(projected)) records.push(projected);
-    else records.push({});
+    if (isRecord(projected) && hasSchemaContent(projected)) {
+      records.push(projected);
+    }
+  }
+
+  if (records.length === 0) {
+    return {
+      ok: false,
+      error:
+        "That JSON does not match the credit-card transaction schema. Extra fields were removed and nothing valid was left.",
+    };
   }
 
   return { ok: true, records, dropped };
@@ -151,4 +160,13 @@ function isArrayNode(node: SchemaNode): boolean {
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function hasSchemaContent(value: unknown): boolean {
+  if (value == null) return false;
+  if (Array.isArray(value)) return value.some(hasSchemaContent);
+  if (typeof value === "object") {
+    return Object.values(value as Record<string, unknown>).some(hasSchemaContent);
+  }
+  return true;
 }

@@ -87,7 +87,12 @@ function prepareJsonAgainstSchema(
   if (!parsed.ok) return { text: rawText, dropped: [] };
 
   const sanitized = sanitizeCreditCardJson(parsed.value);
-  if (!sanitized.ok) return { text: rawText, dropped: [] };
+  if (!sanitized.ok) {
+    if (filename && isJsonFilename(filename)) {
+      throw new Error(sanitized.error);
+    }
+    return { text: rawText, dropped: [] };
+  }
 
   return {
     text: stringifySanitizedRecords(sanitized.records),

@@ -30,6 +30,7 @@ scorer:
 
 - Extra keys (and nested extras) are stripped.
 - Missing fields are allowed. The schema `required` list is not enforced.
+- If nothing on the schema remains after stripping, the file is rejected.
 - A file may be one transaction, an array, or `{ "transactions": [...] }`.
 
 `fixtures/sample-history.json` is a partial history plus junk fields that get
