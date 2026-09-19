@@ -1,40 +1,42 @@
 # NemoScantron
 
-A website that scores **transaction history**. Upload a file or describe the
-payments in text. The dashboard shows a **speedometer** of the risk score in
-the middle of the page, then a written case for **why it is suspected as
-fraud** — each policy hit, the wording that triggered it, and why that pattern
-is treated as hostile.
+Credit-card / AP fraud watch powered by a Nemotron-shaped scorer. One page:
+describe the activity or drop a `.json` history, then a **fraudometer** reads
+the risk.
 
-Red-team work is **not on the website**. Developers introduce new suspicious
-trends with an AI trainer:
-
-```bash
-npm run train-trends
-npm run train-trends -- --apply --brief "micro-deposits then a large pull"
-```
-
-That writes into the same ruleset the public page uses.
+GitHub Pages builds on every push to `main`.
 
 ```
-Website: file or text history ──► sanitize ──► policy ──► Nemotron
-                                                         │
-                                                         ▼
-                                          risk score + rationale on /
-
-Developers: npm run train-trends ──► AI red team ──► feedback ──► new rules
+Composer (text + JSON) ──► validate ──► Nemotron score
+                                 │
+                                 ▼
+                    fraudometer comes online
 ```
 
-The site is a single page: [http://127.0.0.1:43127](http://127.0.0.1:43127).
-
-## Run it
+## Run it locally
 
 ```bash
 npm install
-cp .env.example .env.local   # optional: NVIDIA_API_KEY
 npm run dev
 ```
 
-## Who owns what
+Open [http://127.0.0.1:43127](http://127.0.0.1:43127).
 
-[TEAM.md](./TEAM.md)
+## JSON shape
+
+Any JSON is accepted. Nested objects are flattened into text the policy pack
+can read. A typical history looks like `fixtures/sample-history.json`.
+
+## Gauge bands
+
+Green / amber / red cutoffs live in `src/lib/gauge.ts` (`GAUGE_BANDS`). They
+are not exposed in the UI.
+
+## GitHub Pages
+
+The workflow in `.github/workflows/pages.yml` static-exports Next.js with
+`basePath` `/NemoScantron` and deploys to Pages. After the first green run,
+the site is at `https://<user>.github.io/NemoScantron/`.
+
+Developer trend training is still `npm run train-trends` against a local
+`npm run dev` server.

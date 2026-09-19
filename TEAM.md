@@ -1,7 +1,7 @@
 # NemoScantron — three-person split
 
 The public website is only intake and the score. Red-team trend training is a
-developer command.
+developer command. The homepage is a chat composer plus a fraudometer.
 
 ## Person A — Website
 
@@ -10,10 +10,10 @@ rationale out.
 
 | File | Why it exists |
 | --- | --- |
-| `src/components/site/` | Pages, header, footer |
-| `src/components/console/scan-panel.tsx` | Upload file or describe in text |
-| `src/components/site/speedometer.tsx` | Center risk gauge |
-| `src/components/site/fraud-explanation.tsx` | Why it is suspected as fraud |
+| `src/components/site/` | Pages, header, composer, fraudometer |
+| `src/components/site/composer.tsx` | Text box, JSON upload / drag-drop, submit |
+| `src/components/site/fraudometer.tsx` | Center risk gauge |
+| `src/lib/gauge.ts` | Green / amber / red cutoffs |
 | `src/lib/pipeline/sanitize.ts` | Intake cleaning |
 
 ## Person B — Policy

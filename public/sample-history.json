@@ -1,0 +1,29 @@
+{
+  "account": "Harborline AP",
+  "transactions": [
+    {
+      "date": "2026-09-12",
+      "amount": 184500.0,
+      "payee": "Harborline Treasury",
+      "memo": "CEO asked for a wire immediately"
+    },
+    {
+      "date": "2026-09-12",
+      "amount": 184500.0,
+      "payee": "Harborline Treasury",
+      "memo": "new account — do not use the old"
+    },
+    {
+      "date": "2026-09-13",
+      "amount": 250.0,
+      "payee": "Office coffee",
+      "memo": "routine"
+    },
+    {
+      "date": "2026-09-14",
+      "amount": 41200.0,
+      "payee": "Acme Payments",
+      "memo": "keep this confidential gift card backup"
+    }
+  ]
+}

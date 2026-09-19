@@ -21,7 +21,7 @@ export const metadata: Metadata = {
     template: "%s · NemoScantron",
   },
   description:
-    "Website for scoring transaction history. Upload a file or describe the payments; get a risk score and the reasoning behind it.",
+    "NemoScantron — Nemotron fraud watch. Drop a JSON history or describe the charges; the fraudometer scores the risk.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
