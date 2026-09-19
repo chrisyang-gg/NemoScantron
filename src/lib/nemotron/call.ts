@@ -34,10 +34,20 @@ export async function callNemotron(
     body: JSON.stringify({
       model: status.model,
       temperature: 0.1,
-      max_tokens: 1600,
-      messages: [{ role: "user", content: prompt }],
+      top_p: 0.95,
+      max_tokens: 4096,
+      stream: false,
+      chat_template_kwargs: { enable_thinking: false },
+      messages: [
+        {
+          role: "system",
+          content:
+            "You are Nemotron scoring credit-card fraud. Follow the assembled ruleset exactly. Read every CORE and RULES file, then the optional user context, then the transaction JSON. Execute the ten-step workflow. Reply with one FILE 8 JSON object or array only — no markdown fences, no preamble.",
+        },
+        { role: "user", content: prompt },
+      ],
     }),
-    signal: AbortSignal.timeout(45_000),
+    signal: AbortSignal.timeout(90_000),
   });
 
   if (!response.ok) {
