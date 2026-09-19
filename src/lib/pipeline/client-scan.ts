@@ -132,7 +132,7 @@ function validateIntake(request: ScanRequest):
     filename = file.name;
   }
 
-  const rawText = [cleaned, note].filter(Boolean).join("\n\n");
+  const rawText = [note, cleaned].filter(Boolean).join("\n\n");
   if (!rawText.trim()) {
     return { ok: false, error: "Nothing to score after reading that input." };
   }

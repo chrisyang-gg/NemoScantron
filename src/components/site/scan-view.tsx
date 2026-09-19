@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Composer } from "@/components/site/composer";
 import { Fraudometer } from "@/components/site/fraudometer";
+import { buildBackendPayload, sendToBackend } from "@/lib/backend";
 import {
   scoreSubmission,
   unlockSubmissions,
@@ -26,15 +27,17 @@ export function ScanView() {
   const gaugeVisible = phase !== "compose";
   const locked = phase === "locked";
 
-  function submit() {
+  async function submit() {
     setBusy(true);
     setError(null);
     const result = scoreSubmission({ text, file });
-    setBusy(false);
     if (!result.ok) {
+      setBusy(false);
       setError(result.error);
       return;
     }
+    await sendToBackend(buildBackendPayload(text, file));
+    setBusy(false);
     setScore(result.score);
     setSummary(result.reasoning.explanation?.headline ?? result.reasoning.summary);
     setDroppedNote(

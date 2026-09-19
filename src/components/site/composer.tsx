@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { CornerDownLeft, FileJson, Loader2, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { AttachedJson } from "@/lib/pipeline/client-scan";
@@ -27,7 +27,12 @@ export function Composer({
   onSubmit: () => void;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
+  const textRef = useRef<HTMLTextAreaElement>(null);
   const [dragging, setDragging] = useState(false);
+
+  useEffect(() => {
+    if (!locked) textRef.current?.focus();
+  }, [locked]);
 
   async function takeFile(next: File | undefined) {
     if (!next || locked) return;
@@ -81,12 +86,14 @@ export function Composer({
       }}
     >
       <textarea
+        ref={textRef}
         value={text}
         onChange={(event) => onText(event.target.value)}
-        disabled={locked || busy}
+        readOnly={locked}
         rows={7}
-        placeholder="Paste a note about the charges, or drop a .json history…"
-        className="min-h-[168px] w-full resize-none bg-transparent px-5 pt-4 pb-3 text-[15px] leading-relaxed text-violet-50 placeholder:text-violet-300/35 outline-none disabled:cursor-not-allowed"
+        spellCheck
+        placeholder="Type notes here. They go on top of the JSON file when you submit."
+        className="min-h-[168px] w-full resize-none bg-[#1c142c] px-5 pt-4 pb-3 text-[15px] leading-relaxed text-violet-50 caret-violet-100 outline-none selection:bg-violet-500/40 placeholder:text-violet-300/40 read-only:cursor-default read-only:text-violet-200/70"
         onKeyDown={(event) => {
           if ((event.metaKey || event.ctrlKey) && event.key === "Enter" && !locked && !busy) {
             event.preventDefault();
