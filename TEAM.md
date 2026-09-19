@@ -5,8 +5,8 @@ developer command.
 
 ## Person A — Website
 
-**Owns:** `/`, `/scan`, `/how-it-works`. File or text history in. Risk score
-and rationale out.
+**Owns:** the public page `/`. File or text history in. Risk score and
+rationale out.
 
 | File | Why it exists |
 | --- | --- |

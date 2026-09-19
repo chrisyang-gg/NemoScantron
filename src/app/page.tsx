@@ -1,8 +1,8 @@
-import { HomePage } from "@/components/site/home-page";
+import { ScanView } from "@/components/site/scan-view";
 import { snapshot } from "@/lib/pipeline/store";
 
 export const dynamic = "force-dynamic";
 
 export default function Home() {
-  return <HomePage stats={snapshot().stats} />;
+  return <ScanView initial={snapshot()} />;
 }

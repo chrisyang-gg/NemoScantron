@@ -2,7 +2,6 @@
 
 import { ScanPanel } from "@/components/console/scan-panel";
 import { RiskReport } from "@/components/site/risk-report";
-import { Badge } from "@/components/ui/badge";
 import { useBench, type BenchState } from "@/hooks/use-bench";
 
 export function ScanView({ initial }: { initial: BenchState }) {
@@ -18,15 +17,12 @@ export function ScanView({ initial }: { initial: BenchState }) {
   return (
     <div className="mx-auto w-full max-w-6xl px-4 py-10 md:px-6">
       <div className="max-w-2xl">
-        <p className="text-xs tracking-wide text-muted-foreground uppercase">
-          Scan
-        </p>
-        <h1 className="mt-2 font-heading text-3xl tracking-tight md:text-4xl">
-          Transaction history
+        <h1 className="font-heading text-3xl tracking-tight md:text-4xl">
+          Score a transaction history
         </h1>
         <p className="mt-2 text-sm text-muted-foreground md:text-base">
-          Upload a history file or describe the payments in text. You get a risk
-          score and a plain-language account of how that score was drawn.
+          Upload a file or describe the payments in text. You get a risk score
+          and a plain-language account of how that score was drawn.
         </p>
       </div>
 
@@ -43,24 +39,6 @@ export function ScanView({ initial }: { initial: BenchState }) {
               risk score.
             </p>
           )}
-          {websiteRuns.length > 1 ? (
-            <ul className="mt-6 space-y-1 border-t pt-4">
-              {websiteRuns.slice(0, 5).map((item) => (
-                <li key={item.id}>
-                  <button
-                    type="button"
-                    onClick={() => bench.setActiveRun(item)}
-                    className="flex w-full items-center justify-between rounded-md px-2 py-1 text-left text-sm hover:bg-muted"
-                  >
-                    <span className="truncate">
-                      {item.input.filename ?? item.id}
-                    </span>
-                    <Badge variant="outline">{item.metrics.riskScore}</Badge>
-                  </button>
-                </li>
-              ))}
-            </ul>
-          ) : null}
         </div>
       </div>
     </div>

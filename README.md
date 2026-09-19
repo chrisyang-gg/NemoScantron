@@ -12,26 +12,18 @@ npm run train-trends
 npm run train-trends -- --apply --brief "micro-deposits then a large pull"
 ```
 
-That writes into the same ruleset the public scan page uses.
+That writes into the same ruleset the public page uses.
 
 ```
 Website: file or text history ──► sanitize ──► policy ──► Nemotron
                                                          │
                                                          ▼
-                                          risk score + rationale on /scan
+                                          risk score + rationale on /
 
 Developers: npm run train-trends ──► AI red team ──► feedback ──► new rules
 ```
 
-## Pages
-
-| Path | What it is |
-| --- | --- |
-| `/` | Homepage |
-| `/scan` | File or text intake, risk score, reasoning |
-| `/how-it-works` | Pipeline and team split |
-
-There is no lab page.
+The site is a single page: [http://127.0.0.1:43127](http://127.0.0.1:43127).
 
 ## Run it
 
@@ -40,8 +32,6 @@ npm install
 cp .env.example .env.local   # optional: NVIDIA_API_KEY
 npm run dev
 ```
-
-Open [http://127.0.0.1:43127](http://127.0.0.1:43127).
 
 ## Who owns what
 
