@@ -1,0 +1,113 @@
+{
+  "transaction_id": "txn_test_005",
+  "timestamp": "2026-09-19T20:11:39Z",
+  "amount": 300.0,
+  "currency": "USD",
+  "transaction_type": "cash_advance",
+  "channel": "online",
+  "entry_mode": "online_keyed",
+  "card": {
+    "card_id_token": "card_tok_t005",
+    "bin": "400022",
+    "last_four": "5519",
+    "network": "Visa",
+    "card_type": "credit",
+    "product_tier": "standard",
+    "issuing_bank": "Synchrony Bank",
+    "expiration_month": 9,
+    "expiration_year": 2029,
+    "card_present": false,
+    "card_activated_days_ago": 22,
+    "is_virtual_card": false
+  },
+  "account": {
+    "account_id_token": "acct_tok_t005",
+    "account_open_date": "2026-08-22",
+    "credit_limit": 2000.0,
+    "available_credit": 19.0,
+    "current_balance": 1981.0,
+    "account_status": "active",
+    "billing_zip": "33101",
+    "billing_country": "US",
+    "risk_tier": "medium"
+  },
+  "merchant": {
+    "merchant_id_token": "merch_tok_t005",
+    "merchant_name": "CryptoSwap Exchange",
+    "mcc_code": "6051",
+    "merchant_category": "Cryptocurrency and Digital Currency Exchanges",
+    "merchant_city": "San Jose",
+    "merchant_state": "CA",
+    "merchant_country": "US",
+    "acquirer_id_token": "acq_tok_31",
+    "merchant_risk_score": 0.72,
+    "is_first_time_merchant_for_cardholder": true
+  },
+  "location": {
+    "transaction_country": "US",
+    "distance_from_home_km": 4210.0,
+    "distance_from_last_transaction_km": 30.0,
+    "time_since_last_transaction_minutes": 95,
+    "ip_address_hash": "b92c...1d3f",
+    "ip_country": "US",
+    "device_id_token": "dev_tok_t005_tablet",
+    "device_type": "tablet",
+    "is_known_device_for_account": false
+  },
+  "authentication": {
+    "cvv_result": "match",
+    "avs_result": "partial_match",
+    "pin_verified": false,
+    "three_ds_authenticated": false,
+    "otp_verified": false,
+    "biometric_verified": false
+  },
+  "velocity_features": {
+    "transactions_last_1h": 2,
+    "transactions_last_24h": 8,
+    "amount_sum_last_24h": 1880.0,
+    "distinct_merchants_last_24h": 6,
+    "distinct_countries_last_24h": 1,
+    "avg_transaction_amount_90d": 45.2,
+    "std_transaction_amount_90d": 29.8,
+    "declined_attempts_last_1h": 0
+  },
+  "processing": {
+    "authorization_code_token": "auth_tok_t005",
+    "response_code": "approved",
+    "processor": "Visa Net",
+    "processing_time_ms": 367,
+    "network_transaction_id_token": "netx_tok_t005"
+  },
+  "risk_assessment": {
+    "model_risk_score": 0.91,
+    "rules_triggered": [
+      "VB-003",
+      "VB-006",
+      "VB-007",
+      "VB-004",
+      "MA-001",
+      "MA-002",
+      "MA-003",
+      "MA-007",
+      "MA-010"
+    ],
+    "decision": "decline",
+    "analyst_reviewed": false,
+    "analyst_decision": null
+  },
+  "label": {
+    "is_fraud": true,
+    "fraud_type": "synthetic_identity",
+    "confirmed_by": "red_team",
+    "chargeback_filed": false
+  },
+  "source": "red_team_synthetic",
+  "red_team_metadata": {
+    "synthetic_id": "rt_0502",
+    "round_number": 3,
+    "attack_type": "synthetic_identity",
+    "difficulty": "medium",
+    "red_team_reasoning": "Account opened 28 days ago, card active 22 days. Credit limit run to 99% utilization across 8 transactions in 24 hours. Final transaction is a cash advance to a crypto exchange \u2014 the classic bust-out liquidation step. CVV was matched to pass the hard auth check; partial AVS match is unavoidable with a fabricated billing address."
+  }
+}

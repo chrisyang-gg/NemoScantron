@@ -1,0 +1,100 @@
+{
+  "transaction_id": "txn_test_007",
+  "timestamp": "2026-09-19T19:30:14Z",
+  "amount": 64.2,
+  "currency": "EUR",
+  "transaction_type": "purchase",
+  "channel": "card_present",
+  "entry_mode": "chip",
+  "card": {
+    "card_id_token": "card_tok_t007",
+    "bin": "476200",
+    "last_four": "4401",
+    "network": "Visa",
+    "card_type": "credit",
+    "product_tier": "gold",
+    "issuing_bank": "Chase",
+    "expiration_month": 7,
+    "expiration_year": 2029,
+    "card_present": true,
+    "card_activated_days_ago": 1122,
+    "is_virtual_card": false
+  },
+  "account": {
+    "account_id_token": "acct_tok_t007",
+    "account_open_date": "2021-12-01",
+    "credit_limit": 12000.0,
+    "available_credit": 10814.5,
+    "current_balance": 1185.5,
+    "account_status": "active",
+    "billing_zip": "02101",
+    "billing_country": "US",
+    "risk_tier": "low"
+  },
+  "merchant": {
+    "merchant_id_token": "merch_tok_t007",
+    "merchant_name": "Brasserie du Louvre",
+    "mcc_code": "5812",
+    "merchant_category": "Eating Places and Restaurants",
+    "merchant_city": "Paris",
+    "merchant_country": "FR",
+    "acquirer_id_token": "acq_tok_55",
+    "merchant_risk_score": 0.04,
+    "is_first_time_merchant_for_cardholder": true
+  },
+  "location": {
+    "transaction_city": "Paris",
+    "transaction_country": "FR",
+    "latitude": 48.8606,
+    "longitude": 2.3376,
+    "distance_from_home_km": 5837.0,
+    "distance_from_last_transaction_km": 1.2,
+    "time_since_last_transaction_minutes": 185,
+    "ip_address_hash": "a11f...c302",
+    "ip_country": "FR",
+    "device_id_token": "dev_tok_t007_mobile",
+    "device_type": "mobile",
+    "is_known_device_for_account": true
+  },
+  "authentication": {
+    "cvv_result": "match",
+    "avs_result": "not_checked",
+    "pin_verified": true,
+    "three_ds_authenticated": false,
+    "otp_verified": false,
+    "biometric_verified": false
+  },
+  "velocity_features": {
+    "transactions_last_1h": 1,
+    "transactions_last_24h": 4,
+    "amount_sum_last_24h": 218.4,
+    "distinct_merchants_last_24h": 4,
+    "distinct_countries_last_24h": 1,
+    "avg_transaction_amount_90d": 58.7,
+    "std_transaction_amount_90d": 34.2,
+    "declined_attempts_last_1h": 0
+  },
+  "processing": {
+    "authorization_code_token": "auth_tok_t007",
+    "response_code": "approved",
+    "processor": "Visa Net",
+    "processing_time_ms": 388,
+    "network_transaction_id_token": "netx_tok_t007"
+  },
+  "risk_assessment": {
+    "model_risk_score": 0.11,
+    "rules_triggered": [
+      "GEO-003"
+    ],
+    "decision": "approve",
+    "analyst_reviewed": false,
+    "analyst_decision": null
+  },
+  "label": {
+    "is_fraud": false,
+    "fraud_type": null,
+    "confirmed_by": "none",
+    "chargeback_filed": false
+  },
+  "source": "real"
+}

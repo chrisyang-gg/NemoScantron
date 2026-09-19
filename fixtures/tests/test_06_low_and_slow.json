@@ -1,0 +1,107 @@
+{
+  "transaction_id": "txn_test_006",
+  "timestamp": "2026-09-19T14:50:02Z",
+  "amount": 28.5,
+  "currency": "USD",
+  "transaction_type": "purchase",
+  "channel": "card_not_present",
+  "entry_mode": "online_keyed",
+  "card": {
+    "card_id_token": "card_tok_t006",
+    "bin": "601100",
+    "last_four": "3388",
+    "network": "Discover",
+    "card_type": "credit",
+    "product_tier": "standard",
+    "issuing_bank": "Discover Bank",
+    "expiration_month": 4,
+    "expiration_year": 2027,
+    "card_present": false,
+    "card_activated_days_ago": 488,
+    "is_virtual_card": false
+  },
+  "account": {
+    "account_id_token": "acct_tok_t006",
+    "account_open_date": "2023-07-22",
+    "credit_limit": 4500.0,
+    "available_credit": 3788.25,
+    "current_balance": 711.75,
+    "account_status": "active",
+    "billing_zip": "60601",
+    "billing_country": "US",
+    "risk_tier": "low"
+  },
+  "merchant": {
+    "merchant_id_token": "merch_tok_t006",
+    "merchant_name": "DailyBox Subscriptions",
+    "mcc_code": "5999",
+    "merchant_category": "Miscellaneous Retail",
+    "merchant_city": "Austin",
+    "merchant_state": "TX",
+    "merchant_country": "US",
+    "acquirer_id_token": "acq_tok_05",
+    "merchant_risk_score": 0.21,
+    "is_first_time_merchant_for_cardholder": false
+  },
+  "location": {
+    "transaction_city": "Austin",
+    "transaction_state": "TX",
+    "transaction_country": "US",
+    "latitude": 30.2672,
+    "longitude": -97.7431,
+    "distance_from_home_km": 452.0,
+    "distance_from_last_transaction_km": 0.0,
+    "time_since_last_transaction_minutes": 218,
+    "ip_address_hash": "4e8d...77b1",
+    "ip_country": "US",
+    "device_id_token": "dev_tok_t006_desktop",
+    "device_type": "desktop",
+    "is_known_device_for_account": true
+  },
+  "authentication": {
+    "cvv_result": "match",
+    "avs_result": "full_match",
+    "pin_verified": false,
+    "three_ds_authenticated": false,
+    "otp_verified": false,
+    "biometric_verified": false
+  },
+  "velocity_features": {
+    "transactions_last_1h": 1,
+    "transactions_last_24h": 5,
+    "amount_sum_last_24h": 162.75,
+    "distinct_merchants_last_24h": 3,
+    "distinct_countries_last_24h": 1,
+    "avg_transaction_amount_90d": 61.8,
+    "std_transaction_amount_90d": 35.4,
+    "declined_attempts_last_1h": 0
+  },
+  "processing": {
+    "authorization_code_token": "auth_tok_t006",
+    "response_code": "approved",
+    "processor": "Discover Network",
+    "processing_time_ms": 289,
+    "network_transaction_id_token": "netx_tok_t006"
+  },
+  "risk_assessment": {
+    "model_risk_score": 0.38,
+    "rules_triggered": [],
+    "decision": "flag_for_review",
+    "analyst_reviewed": false,
+    "analyst_decision": null
+  },
+  "label": {
+    "is_fraud": true,
+    "fraud_type": "card_not_present_fraud",
+    "confirmed_by": "red_team",
+    "chargeback_filed": false
+  },
+  "source": "red_team_synthetic",
+  "red_team_metadata": {
+    "synthetic_id": "rt_0601",
+    "round_number": 4,
+    "attack_type": "low_and_slow",
+    "difficulty": "hard",
+    "red_team_reasoning": "All five transactions today between $20\u2013$55, putting the 24h average at $32.55 \u2014 well below the $80 per-transaction average trigger. Known device and matching CVV/AVS keep all geo and auth rules silent. No individual rule fires at high or critical severity. Detection relies entirely on the LOW-AND-SLOW pattern's aggregate view across the day's activity."
+  }
+}

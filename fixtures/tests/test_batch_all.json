@@ -1,0 +1,762 @@
+[
+  {
+    "transaction_id": "txn_test_001",
+    "timestamp": "2026-09-19T09:14:33Z",
+    "amount": 87.49,
+    "currency": "USD",
+    "transaction_type": "purchase",
+    "channel": "online",
+    "entry_mode": "online_keyed",
+    "card": {
+      "card_id_token": "card_tok_t001",
+      "bin": "411111",
+      "last_four": "1111",
+      "network": "Visa",
+      "card_type": "credit",
+      "product_tier": "rewards",
+      "issuing_bank": "Chase",
+      "expiration_month": 8,
+      "expiration_year": 2028,
+      "card_present": false,
+      "card_activated_days_ago": 847,
+      "is_virtual_card": false
+    },
+    "account": {
+      "account_id_token": "acct_tok_t001",
+      "account_open_date": "2022-01-15",
+      "credit_limit": 10000.0,
+      "available_credit": 8241.63,
+      "current_balance": 1758.37,
+      "account_status": "active",
+      "billing_zip": "90210",
+      "billing_country": "US",
+      "risk_tier": "low"
+    },
+    "merchant": {
+      "merchant_id_token": "merch_tok_t001",
+      "merchant_name": "Amazon.com",
+      "mcc_code": "5964",
+      "merchant_category": "Direct Marketing \u2014 Catalog Merchants",
+      "merchant_city": "Seattle",
+      "merchant_state": "WA",
+      "merchant_country": "US",
+      "acquirer_id_token": "acq_tok_01",
+      "merchant_risk_score": 0.03,
+      "is_first_time_merchant_for_cardholder": false
+    },
+    "location": {
+      "transaction_city": "Seattle",
+      "transaction_state": "WA",
+      "transaction_country": "US",
+      "latitude": 47.6062,
+      "longitude": -122.3321,
+      "distance_from_home_km": 0.0,
+      "distance_from_last_transaction_km": 0.0,
+      "time_since_last_transaction_minutes": 2880,
+      "ip_address_hash": "3f8a...b12c",
+      "ip_country": "US",
+      "device_id_token": "dev_tok_t001_mobile",
+      "device_type": "mobile",
+      "is_known_device_for_account": true
+    },
+    "authentication": {
+      "cvv_result": "match",
+      "avs_result": "full_match",
+      "pin_verified": false,
+      "three_ds_authenticated": true,
+      "otp_verified": false,
+      "biometric_verified": true
+    },
+    "velocity_features": {
+      "transactions_last_1h": 1,
+      "transactions_last_24h": 2,
+      "amount_sum_last_24h": 121.48,
+      "distinct_merchants_last_24h": 2,
+      "distinct_countries_last_24h": 1,
+      "avg_transaction_amount_90d": 74.2,
+      "std_transaction_amount_90d": 41.8,
+      "declined_attempts_last_1h": 0
+    },
+    "processing": {
+      "authorization_code_token": "auth_tok_t001",
+      "response_code": "approved",
+      "processor": "Visa Net",
+      "processing_time_ms": 312,
+      "network_transaction_id_token": "netx_tok_t001"
+    },
+    "risk_assessment": {
+      "model_risk_score": 0.04,
+      "rules_triggered": [],
+      "decision": "approve",
+      "analyst_reviewed": false,
+      "analyst_decision": null
+    },
+    "label": {
+      "is_fraud": false,
+      "fraud_type": null,
+      "confirmed_by": "none",
+      "chargeback_filed": false
+    },
+    "source": "real"
+  },
+  {
+    "transaction_id": "txn_test_002",
+    "timestamp": "2026-09-19T02:47:11Z",
+    "amount": 1.0,
+    "currency": "USD",
+    "transaction_type": "purchase",
+    "channel": "online",
+    "entry_mode": "online_keyed",
+    "card": {
+      "card_id_token": "card_tok_t002",
+      "bin": "554433",
+      "last_four": "8821",
+      "network": "Mastercard",
+      "card_type": "credit",
+      "product_tier": "standard",
+      "issuing_bank": "Bank of America",
+      "expiration_month": 6,
+      "expiration_year": 2027,
+      "card_present": false,
+      "card_activated_days_ago": 1240,
+      "is_virtual_card": false
+    },
+    "account": {
+      "account_id_token": "acct_tok_t002",
+      "account_open_date": "2021-05-10",
+      "credit_limit": 5000.0,
+      "available_credit": 4878.0,
+      "current_balance": 122.0,
+      "account_status": "active",
+      "billing_zip": "30301",
+      "billing_country": "US",
+      "risk_tier": "low"
+    },
+    "merchant": {
+      "merchant_id_token": "merch_tok_t002",
+      "merchant_name": "StreamVerify Micro Services",
+      "mcc_code": "7372",
+      "merchant_category": "Prepackaged Software",
+      "merchant_city": "Wilmington",
+      "merchant_state": "DE",
+      "merchant_country": "US",
+      "acquirer_id_token": "acq_tok_09",
+      "merchant_risk_score": 0.47,
+      "is_first_time_merchant_for_cardholder": true
+    },
+    "location": {
+      "transaction_country": "US",
+      "distance_from_home_km": 1204.3,
+      "distance_from_last_transaction_km": 0.0,
+      "time_since_last_transaction_minutes": 4,
+      "ip_address_hash": "9c2f...44ae",
+      "ip_country": "US",
+      "device_id_token": "dev_tok_t002_unknown",
+      "device_type": "desktop",
+      "is_known_device_for_account": false
+    },
+    "authentication": {
+      "cvv_result": "not_provided",
+      "avs_result": "not_checked",
+      "pin_verified": false,
+      "three_ds_authenticated": false,
+      "otp_verified": false,
+      "biometric_verified": false
+    },
+    "velocity_features": {
+      "transactions_last_1h": 9,
+      "transactions_last_24h": 9,
+      "amount_sum_last_24h": 9.0,
+      "distinct_merchants_last_24h": 7,
+      "distinct_countries_last_24h": 1,
+      "avg_transaction_amount_90d": 88.5,
+      "std_transaction_amount_90d": 52.1,
+      "declined_attempts_last_1h": 5
+    },
+    "processing": {
+      "authorization_code_token": "auth_tok_t002",
+      "response_code": "approved",
+      "processor": "Mastercard Banknet",
+      "processing_time_ms": 244,
+      "network_transaction_id_token": "netx_tok_t002"
+    },
+    "risk_assessment": {
+      "model_risk_score": 0.93,
+      "rules_triggered": [
+        "VB-001",
+        "VB-004",
+        "VB-005",
+        "MA-002",
+        "MA-006",
+        "GEO-006"
+      ],
+      "decision": "decline",
+      "analyst_reviewed": true,
+      "analyst_decision": "confirmed_fraud"
+    },
+    "label": {
+      "is_fraud": true,
+      "fraud_type": "card_testing",
+      "confirmed_by": "red_team",
+      "chargeback_filed": false
+    },
+    "source": "red_team_synthetic",
+    "red_team_metadata": {
+      "synthetic_id": "rt_0201",
+      "round_number": 2,
+      "attack_type": "card_testing",
+      "difficulty": "medium",
+      "red_team_reasoning": "Nine $1 probes across seven merchants within the hour, all under the $5 micro-transaction threshold, with CVV withheld to avoid a hard mismatch decline. Five prior declines indicate the card number was tested on other platforms first."
+    }
+  },
+  {
+    "transaction_id": "txn_test_003",
+    "timestamp": "2026-09-19T16:05:44Z",
+    "amount": 312.0,
+    "currency": "USD",
+    "transaction_type": "purchase",
+    "channel": "card_not_present",
+    "entry_mode": "online_keyed",
+    "card": {
+      "card_id_token": "card_tok_t003",
+      "bin": "377400",
+      "last_four": "3041",
+      "network": "American Express",
+      "card_type": "credit",
+      "product_tier": "platinum",
+      "issuing_bank": "American Express",
+      "expiration_month": 3,
+      "expiration_year": 2029,
+      "card_present": false,
+      "card_activated_days_ago": 1892,
+      "is_virtual_card": false
+    },
+    "account": {
+      "account_id_token": "acct_tok_t003",
+      "account_open_date": "2020-11-03",
+      "credit_limit": 20000.0,
+      "available_credit": 17440.0,
+      "current_balance": 2560.0,
+      "account_status": "active",
+      "billing_zip": "10001",
+      "billing_country": "US",
+      "risk_tier": "low"
+    },
+    "merchant": {
+      "merchant_id_token": "merch_tok_t003",
+      "merchant_name": "IndiaElectro Pvt Ltd",
+      "mcc_code": "5732",
+      "merchant_category": "Electronics Stores",
+      "merchant_city": "Mumbai",
+      "merchant_country": "IN",
+      "acquirer_id_token": "acq_tok_22",
+      "merchant_risk_score": 0.58,
+      "is_first_time_merchant_for_cardholder": true
+    },
+    "location": {
+      "transaction_city": "Mumbai",
+      "transaction_country": "IN",
+      "latitude": 19.076,
+      "longitude": 72.8777,
+      "distance_from_home_km": 12553.0,
+      "distance_from_last_transaction_km": 12553.0,
+      "time_since_last_transaction_minutes": 22,
+      "ip_address_hash": "7b1e...90fa",
+      "ip_country": "PK",
+      "device_id_token": "dev_tok_t003_unknown",
+      "device_type": "desktop",
+      "is_known_device_for_account": false
+    },
+    "authentication": {
+      "cvv_result": "match",
+      "avs_result": "no_match",
+      "pin_verified": false,
+      "three_ds_authenticated": false,
+      "otp_verified": false,
+      "biometric_verified": false
+    },
+    "velocity_features": {
+      "transactions_last_1h": 2,
+      "transactions_last_24h": 4,
+      "amount_sum_last_24h": 798.5,
+      "distinct_merchants_last_24h": 3,
+      "distinct_countries_last_24h": 2,
+      "avg_transaction_amount_90d": 210.3,
+      "std_transaction_amount_90d": 118.6,
+      "declined_attempts_last_1h": 0
+    },
+    "processing": {
+      "authorization_code_token": "auth_tok_t003",
+      "response_code": "declined_suspected_fraud",
+      "processor": "Amex Network",
+      "processing_time_ms": 198,
+      "network_transaction_id_token": "netx_tok_t003"
+    },
+    "risk_assessment": {
+      "model_risk_score": 0.96,
+      "rules_triggered": [
+        "GEO-001",
+        "GEO-002",
+        "GEO-003",
+        "GEO-004",
+        "GEO-006",
+        "MA-001",
+        "MA-002",
+        "MA-007",
+        "VB-008"
+      ],
+      "decision": "decline",
+      "analyst_reviewed": true,
+      "analyst_decision": "confirmed_fraud"
+    },
+    "label": {
+      "is_fraud": true,
+      "fraud_type": "stolen_card",
+      "confirmed_by": "red_team",
+      "chargeback_filed": false
+    },
+    "source": "red_team_synthetic",
+    "red_team_metadata": {
+      "synthetic_id": "rt_0302",
+      "round_number": 2,
+      "attack_type": "geo_impossible_travel",
+      "difficulty": "medium",
+      "red_team_reasoning": "Transaction placed 22 minutes after a legitimate New York authorization, implying a travel speed of roughly 34,000 km/h. IP routed through Pakistan rather than India to add a second country mismatch. AVS intentionally unmatched to compound the score, but amount kept below $500 to avoid a hard issuer hold on foreign high-value transactions."
+    }
+  },
+  {
+    "transaction_id": "txn_test_004",
+    "timestamp": "2026-09-19T03:22:08Z",
+    "amount": 1480.0,
+    "currency": "USD",
+    "transaction_type": "purchase",
+    "channel": "online",
+    "entry_mode": "online_keyed",
+    "card": {
+      "card_id_token": "card_tok_t004",
+      "bin": "545301",
+      "last_four": "7762",
+      "network": "Mastercard",
+      "card_type": "credit",
+      "product_tier": "signature",
+      "issuing_bank": "Capital One",
+      "expiration_month": 11,
+      "expiration_year": 2028,
+      "card_present": false,
+      "card_activated_days_ago": 547,
+      "is_virtual_card": false
+    },
+    "account": {
+      "account_id_token": "acct_tok_t004",
+      "account_open_date": "2021-08-14",
+      "credit_limit": 15000.0,
+      "available_credit": 12300.0,
+      "current_balance": 2700.0,
+      "account_status": "active",
+      "billing_zip": "77001",
+      "billing_country": "US",
+      "risk_tier": "low"
+    },
+    "merchant": {
+      "merchant_id_token": "merch_tok_t004",
+      "merchant_name": "LuxuryWatch Direct",
+      "mcc_code": "5094",
+      "merchant_category": "Jewelry, Watches and Silverware",
+      "merchant_city": "Miami",
+      "merchant_state": "FL",
+      "merchant_country": "US",
+      "acquirer_id_token": "acq_tok_14",
+      "merchant_risk_score": 0.38,
+      "is_first_time_merchant_for_cardholder": true
+    },
+    "location": {
+      "transaction_city": "Miami",
+      "transaction_state": "FL",
+      "transaction_country": "US",
+      "latitude": 25.7617,
+      "longitude": -80.1918,
+      "distance_from_home_km": 1540.0,
+      "distance_from_last_transaction_km": 1540.0,
+      "time_since_last_transaction_minutes": 360,
+      "ip_address_hash": "0d4a...f99c",
+      "ip_country": "RU",
+      "device_id_token": "dev_tok_t004_new_xff",
+      "device_type": "desktop",
+      "is_known_device_for_account": false
+    },
+    "authentication": {
+      "cvv_result": "match",
+      "avs_result": "no_match",
+      "pin_verified": false,
+      "three_ds_authenticated": false,
+      "otp_verified": false,
+      "biometric_verified": false
+    },
+    "velocity_features": {
+      "transactions_last_1h": 2,
+      "transactions_last_24h": 3,
+      "amount_sum_last_24h": 1530.0,
+      "distinct_merchants_last_24h": 2,
+      "distinct_countries_last_24h": 1,
+      "avg_transaction_amount_90d": 112.4,
+      "std_transaction_amount_90d": 68.2,
+      "declined_attempts_last_1h": 1
+    },
+    "processing": {
+      "authorization_code_token": "auth_tok_t004",
+      "response_code": "approved",
+      "processor": "Mastercard Banknet",
+      "processing_time_ms": 421,
+      "network_transaction_id_token": "netx_tok_t004"
+    },
+    "risk_assessment": {
+      "model_risk_score": 0.87,
+      "rules_triggered": [
+        "GEO-003",
+        "GEO-006",
+        "MA-002",
+        "MA-007",
+        "MA-008",
+        "VB-002",
+        "VB-005"
+      ],
+      "decision": "hold",
+      "analyst_reviewed": false,
+      "analyst_decision": null
+    },
+    "label": {
+      "is_fraud": true,
+      "fraud_type": "account_takeover",
+      "confirmed_by": "red_team",
+      "chargeback_filed": false
+    },
+    "source": "red_team_synthetic",
+    "red_team_metadata": {
+      "synthetic_id": "rt_0401",
+      "round_number": 3,
+      "attack_type": "account_takeover",
+      "difficulty": "hard",
+      "red_team_reasoning": "CVV was matched (obtained via phishing) to avoid the MA-005 signal. Amount $1,480 exceeds 13x the 90-day average but was chosen to stay below the issuer's $2,000 online-single-transaction alert. IP routed through a Russian exit node. AVS mismatch is unavoidable without the billing zip; the hard signals here are device and IP anomaly, not authentication."
+    }
+  },
+  {
+    "transaction_id": "txn_test_005",
+    "timestamp": "2026-09-19T20:11:39Z",
+    "amount": 300.0,
+    "currency": "USD",
+    "transaction_type": "cash_advance",
+    "channel": "online",
+    "entry_mode": "online_keyed",
+    "card": {
+      "card_id_token": "card_tok_t005",
+      "bin": "400022",
+      "last_four": "5519",
+      "network": "Visa",
+      "card_type": "credit",
+      "product_tier": "standard",
+      "issuing_bank": "Synchrony Bank",
+      "expiration_month": 9,
+      "expiration_year": 2029,
+      "card_present": false,
+      "card_activated_days_ago": 22,
+      "is_virtual_card": false
+    },
+    "account": {
+      "account_id_token": "acct_tok_t005",
+      "account_open_date": "2026-08-22",
+      "credit_limit": 2000.0,
+      "available_credit": 19.0,
+      "current_balance": 1981.0,
+      "account_status": "active",
+      "billing_zip": "33101",
+      "billing_country": "US",
+      "risk_tier": "medium"
+    },
+    "merchant": {
+      "merchant_id_token": "merch_tok_t005",
+      "merchant_name": "CryptoSwap Exchange",
+      "mcc_code": "6051",
+      "merchant_category": "Cryptocurrency and Digital Currency Exchanges",
+      "merchant_city": "San Jose",
+      "merchant_state": "CA",
+      "merchant_country": "US",
+      "acquirer_id_token": "acq_tok_31",
+      "merchant_risk_score": 0.72,
+      "is_first_time_merchant_for_cardholder": true
+    },
+    "location": {
+      "transaction_country": "US",
+      "distance_from_home_km": 4210.0,
+      "distance_from_last_transaction_km": 30.0,
+      "time_since_last_transaction_minutes": 95,
+      "ip_address_hash": "b92c...1d3f",
+      "ip_country": "US",
+      "device_id_token": "dev_tok_t005_tablet",
+      "device_type": "tablet",
+      "is_known_device_for_account": false
+    },
+    "authentication": {
+      "cvv_result": "match",
+      "avs_result": "partial_match",
+      "pin_verified": false,
+      "three_ds_authenticated": false,
+      "otp_verified": false,
+      "biometric_verified": false
+    },
+    "velocity_features": {
+      "transactions_last_1h": 2,
+      "transactions_last_24h": 8,
+      "amount_sum_last_24h": 1880.0,
+      "distinct_merchants_last_24h": 6,
+      "distinct_countries_last_24h": 1,
+      "avg_transaction_amount_90d": 45.2,
+      "std_transaction_amount_90d": 29.8,
+      "declined_attempts_last_1h": 0
+    },
+    "processing": {
+      "authorization_code_token": "auth_tok_t005",
+      "response_code": "approved",
+      "processor": "Visa Net",
+      "processing_time_ms": 367,
+      "network_transaction_id_token": "netx_tok_t005"
+    },
+    "risk_assessment": {
+      "model_risk_score": 0.91,
+      "rules_triggered": [
+        "VB-003",
+        "VB-006",
+        "VB-007",
+        "VB-004",
+        "MA-001",
+        "MA-002",
+        "MA-003",
+        "MA-007",
+        "MA-010"
+      ],
+      "decision": "decline",
+      "analyst_reviewed": false,
+      "analyst_decision": null
+    },
+    "label": {
+      "is_fraud": true,
+      "fraud_type": "synthetic_identity",
+      "confirmed_by": "red_team",
+      "chargeback_filed": false
+    },
+    "source": "red_team_synthetic",
+    "red_team_metadata": {
+      "synthetic_id": "rt_0502",
+      "round_number": 3,
+      "attack_type": "synthetic_identity",
+      "difficulty": "medium",
+      "red_team_reasoning": "Account opened 28 days ago, card active 22 days. Credit limit run to 99% utilization across 8 transactions in 24 hours. Final transaction is a cash advance to a crypto exchange \u2014 the classic bust-out liquidation step. CVV was matched to pass the hard auth check; partial AVS match is unavoidable with a fabricated billing address."
+    }
+  },
+  {
+    "transaction_id": "txn_test_006",
+    "timestamp": "2026-09-19T14:50:02Z",
+    "amount": 28.5,
+    "currency": "USD",
+    "transaction_type": "purchase",
+    "channel": "card_not_present",
+    "entry_mode": "online_keyed",
+    "card": {
+      "card_id_token": "card_tok_t006",
+      "bin": "601100",
+      "last_four": "3388",
+      "network": "Discover",
+      "card_type": "credit",
+      "product_tier": "standard",
+      "issuing_bank": "Discover Bank",
+      "expiration_month": 4,
+      "expiration_year": 2027,
+      "card_present": false,
+      "card_activated_days_ago": 488,
+      "is_virtual_card": false
+    },
+    "account": {
+      "account_id_token": "acct_tok_t006",
+      "account_open_date": "2023-07-22",
+      "credit_limit": 4500.0,
+      "available_credit": 3788.25,
+      "current_balance": 711.75,
+      "account_status": "active",
+      "billing_zip": "60601",
+      "billing_country": "US",
+      "risk_tier": "low"
+    },
+    "merchant": {
+      "merchant_id_token": "merch_tok_t006",
+      "merchant_name": "DailyBox Subscriptions",
+      "mcc_code": "5999",
+      "merchant_category": "Miscellaneous Retail",
+      "merchant_city": "Austin",
+      "merchant_state": "TX",
+      "merchant_country": "US",
+      "acquirer_id_token": "acq_tok_05",
+      "merchant_risk_score": 0.21,
+      "is_first_time_merchant_for_cardholder": false
+    },
+    "location": {
+      "transaction_city": "Austin",
+      "transaction_state": "TX",
+      "transaction_country": "US",
+      "latitude": 30.2672,
+      "longitude": -97.7431,
+      "distance_from_home_km": 452.0,
+      "distance_from_last_transaction_km": 0.0,
+      "time_since_last_transaction_minutes": 218,
+      "ip_address_hash": "4e8d...77b1",
+      "ip_country": "US",
+      "device_id_token": "dev_tok_t006_desktop",
+      "device_type": "desktop",
+      "is_known_device_for_account": true
+    },
+    "authentication": {
+      "cvv_result": "match",
+      "avs_result": "full_match",
+      "pin_verified": false,
+      "three_ds_authenticated": false,
+      "otp_verified": false,
+      "biometric_verified": false
+    },
+    "velocity_features": {
+      "transactions_last_1h": 1,
+      "transactions_last_24h": 5,
+      "amount_sum_last_24h": 162.75,
+      "distinct_merchants_last_24h": 3,
+      "distinct_countries_last_24h": 1,
+      "avg_transaction_amount_90d": 61.8,
+      "std_transaction_amount_90d": 35.4,
+      "declined_attempts_last_1h": 0
+    },
+    "processing": {
+      "authorization_code_token": "auth_tok_t006",
+      "response_code": "approved",
+      "processor": "Discover Network",
+      "processing_time_ms": 289,
+      "network_transaction_id_token": "netx_tok_t006"
+    },
+    "risk_assessment": {
+      "model_risk_score": 0.38,
+      "rules_triggered": [],
+      "decision": "flag_for_review",
+      "analyst_reviewed": false,
+      "analyst_decision": null
+    },
+    "label": {
+      "is_fraud": true,
+      "fraud_type": "card_not_present_fraud",
+      "confirmed_by": "red_team",
+      "chargeback_filed": false
+    },
+    "source": "red_team_synthetic",
+    "red_team_metadata": {
+      "synthetic_id": "rt_0601",
+      "round_number": 4,
+      "attack_type": "low_and_slow",
+      "difficulty": "hard",
+      "red_team_reasoning": "All five transactions today between $20\u2013$55, putting the 24h average at $32.55 \u2014 well below the $80 per-transaction average trigger. Known device and matching CVV/AVS keep all geo and auth rules silent. No individual rule fires at high or critical severity. Detection relies entirely on the LOW-AND-SLOW pattern's aggregate view across the day's activity."
+    }
+  },
+  {
+    "transaction_id": "txn_test_007",
+    "timestamp": "2026-09-19T19:30:14Z",
+    "amount": 64.2,
+    "currency": "EUR",
+    "transaction_type": "purchase",
+    "channel": "card_present",
+    "entry_mode": "chip",
+    "card": {
+      "card_id_token": "card_tok_t007",
+      "bin": "476200",
+      "last_four": "4401",
+      "network": "Visa",
+      "card_type": "credit",
+      "product_tier": "gold",
+      "issuing_bank": "Chase",
+      "expiration_month": 7,
+      "expiration_year": 2029,
+      "card_present": true,
+      "card_activated_days_ago": 1122,
+      "is_virtual_card": false
+    },
+    "account": {
+      "account_id_token": "acct_tok_t007",
+      "account_open_date": "2021-12-01",
+      "credit_limit": 12000.0,
+      "available_credit": 10814.5,
+      "current_balance": 1185.5,
+      "account_status": "active",
+      "billing_zip": "02101",
+      "billing_country": "US",
+      "risk_tier": "low"
+    },
+    "merchant": {
+      "merchant_id_token": "merch_tok_t007",
+      "merchant_name": "Brasserie du Louvre",
+      "mcc_code": "5812",
+      "merchant_category": "Eating Places and Restaurants",
+      "merchant_city": "Paris",
+      "merchant_country": "FR",
+      "acquirer_id_token": "acq_tok_55",
+      "merchant_risk_score": 0.04,
+      "is_first_time_merchant_for_cardholder": true
+    },
+    "location": {
+      "transaction_city": "Paris",
+      "transaction_country": "FR",
+      "latitude": 48.8606,
+      "longitude": 2.3376,
+      "distance_from_home_km": 5837.0,
+      "distance_from_last_transaction_km": 1.2,
+      "time_since_last_transaction_minutes": 185,
+      "ip_address_hash": "a11f...c302",
+      "ip_country": "FR",
+      "device_id_token": "dev_tok_t007_mobile",
+      "device_type": "mobile",
+      "is_known_device_for_account": true
+    },
+    "authentication": {
+      "cvv_result": "match",
+      "avs_result": "not_checked",
+      "pin_verified": true,
+      "three_ds_authenticated": false,
+      "otp_verified": false,
+      "biometric_verified": false
+    },
+    "velocity_features": {
+      "transactions_last_1h": 1,
+      "transactions_last_24h": 4,
+      "amount_sum_last_24h": 218.4,
+      "distinct_merchants_last_24h": 4,
+      "distinct_countries_last_24h": 1,
+      "avg_transaction_amount_90d": 58.7,
+      "std_transaction_amount_90d": 34.2,
+      "declined_attempts_last_1h": 0
+    },
+    "processing": {
+      "authorization_code_token": "auth_tok_t007",
+      "response_code": "approved",
+      "processor": "Visa Net",
+      "processing_time_ms": 388,
+      "network_transaction_id_token": "netx_tok_t007"
+    },
+    "risk_assessment": {
+      "model_risk_score": 0.11,
+      "rules_triggered": [
+        "GEO-003"
+      ],
+      "decision": "approve",
+      "analyst_reviewed": false,
+      "analyst_decision": null
+    },
+    "label": {
+      "is_fraud": false,
+      "fraud_type": null,
+      "confirmed_by": "none",
+      "chargeback_filed": false
+    },
+    "source": "real"
+  }
+]
