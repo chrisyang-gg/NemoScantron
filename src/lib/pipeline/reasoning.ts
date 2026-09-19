@@ -29,6 +29,10 @@ export function reasonWithNemotron(args: {
     block * 38 + flag * 18 + watch * 10 + injection * 12 + (sanitized.text ? 4 : 0),
   );
 
+  // A blocking policy is an automatic fraud dispatch. Flag-only stays in the
+  // analyst queue. Empty or tiny payloads stay near the floor.
+  if (block >= 1) riskScore = Math.max(riskScore, 82);
+  if (flag >= 1 && block === 0) riskScore = Math.max(riskScore, 48);
   if (!sanitized.text) riskScore = 8;
   if (hits.length === 0 && sanitized.text.split(/\s+/).length < 12) riskScore = 12;
 
