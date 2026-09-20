@@ -17,7 +17,7 @@ function Panel({
 }) {
   return (
     <section
-      className={`rounded-2xl border border-violet-400/15 bg-violet-500/[0.06] p-4 ${className}`}
+      className={`overflow-hidden rounded-2xl border border-violet-400/15 bg-violet-500/[0.06] p-4 ${className}`}
     >
       <h3 className="mb-3 text-[11px] tracking-[0.22em] text-violet-300/65 uppercase">{title}</h3>
       {children}

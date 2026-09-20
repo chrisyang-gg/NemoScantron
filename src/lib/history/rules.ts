@@ -28,6 +28,41 @@ export const RULE_META = [
 
 export const RULE_IDS = RULE_META.map((item) => item.id);
 
+export type RuleFamily = "velocity" | "geo" | "merchant" | "attack" | "threshold" | "other";
+
+export const RULE_FAMILY_META: Record<RuleFamily, { label: string; hue: number }> = {
+  velocity: { label: "Velocity / behavioral", hue: 32 },
+  geo: { label: "Geo / device", hue: 196 },
+  merchant: { label: "Merchant / auth", hue: 328 },
+  attack: { label: "Attack pattern", hue: 4 },
+  threshold: { label: "Threshold", hue: 52 },
+  other: { label: "Other rule", hue: 262 },
+};
+
 export function ruleName(id: string): string {
   return RULE_META.find((item) => item.id === id)?.name ?? id;
+}
+
+export function ruleFamily(id: string): RuleFamily {
+  const key = id.trim().toUpperCase();
+  if (key.startsWith("VB")) return "velocity";
+  if (key.startsWith("GEO") && !key.includes("IMPOSSIBLE")) return "geo";
+  if (key.startsWith("MA")) return "merchant";
+  if (key.startsWith("TH")) return "threshold";
+  if (
+    key.startsWith("AP") ||
+    key.includes("PATTERN") ||
+    key.includes("CARD-TESTING") ||
+    key.includes("IMPOSSIBLE")
+  ) {
+    return "attack";
+  }
+  return "other";
+}
+
+export function ruleHue(id: string): number {
+  const base = RULE_FAMILY_META[ruleFamily(id)].hue;
+  const digits = id.match(/(\d+)/);
+  const n = digits ? Number(digits[1]) : [...id].reduce((sum, char) => sum + char.charCodeAt(0), 0);
+  return (base + ((n * 13) % 21) - 10 + 360) % 360;
 }
