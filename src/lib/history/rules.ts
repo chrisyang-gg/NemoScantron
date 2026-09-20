@@ -43,6 +43,11 @@ export function ruleName(id: string): string {
   return RULE_META.find((item) => item.id === id)?.name ?? id;
 }
 
+export function ruleHover(id: string, count: number) {
+  if (count <= 0) return null;
+  return { id, name: ruleName(id), count };
+}
+
 export function ruleFamily(id: string): RuleFamily {
   const key = id.trim().toUpperCase();
   if (key.startsWith("VB")) return "velocity";
