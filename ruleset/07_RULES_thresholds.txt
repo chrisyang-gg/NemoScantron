@@ -9,10 +9,10 @@
 │ METADATA  (Red-Team AI updates this block after each round)                │
 │                                                                             │
 │   version                  : v1.0                                          │
-│   last_updated_round       : 0                                             │
-│   last_updated_timestamp   : 2026-09-19T00:00:00Z                         │
-│   change_summary           : Initial thresholds — calibrated on baseline   │
-│   red_team_change_rationale: N/A — initial load                            │
+│   last_updated_round       : 3                                             │
+│   last_updated_timestamp   : 2026-09-20T00:58:25Z                         │
+│   change_summary           : Lowered review threshold to 0.20 for clean-auth transactions with baseline devia
+│   red_team_change_rationale: Lowered review threshold to 0.20 for clean-auth transactions with baseline devia
 └─────────────────────────────────────────────────────────────────────────────┘
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -166,8 +166,12 @@ RED-TEAM LEARNED THRESHOLD ADJUSTMENTS
 (Red-Team AI appends threshold change rationale here after each round.
  Format: [ROUND N | threshold name | old value → new value | rationale])
 
-  — No threshold adjustments recorded yet. Round 0 baseline. —
+  [ROUND 1 | HOLD_THRESHOLD | Lower hold threshold from 0.60 to 0.55 | Case txn_geoimp_001_hard with impossible travel (900 km/h) scored 0.575 and was held, not declined. A physically impossible transaction should trigger decline, not hold. The current 0.60 decline threshold is too high for critical-severity geo anomalies. Lowering hold threshold to 0.55 creates a tighter band (0.55-0.60 hold, ≥0.60 decline) ensuring impossible travel cases escalate to decline.]
 
 ╔══════════════════════════════════════════════════════════════════════════════╗
 ║  END: RISK THRESHOLDS AND SCORING WEIGHTS                                  ║
 ╚══════════════════════════════════════════════════════════════════════════════╝
+
+  [ROUND 2 | FLAG_FOR_REVIEW_THRESHOLD | Lower from 0.30 to 0.25 for transactions with card_age_days <= 5 OR (cvv == 'no_match' AND avs == 'no_match') | Multiple edge cases (txn_edge_005 at 0.275, txn_synth_004 at 0.475) fell into flag_for_review when they should decline. Dual auth failures or brand-new cards warrant tighter scrutiny. Context-specific threshold lowering ensures these high-risk scenarios escalate appropriately without over-flagging established cards.]
+
+  [ROUND 3 | REVIEW_THRESHOLD | Lower review threshold from 0.25 to 0.20 for transactions with amount > (avg_90d × 1.5) AND all auth signals clean | Cases txn_low_slow_006 and txn_grocery_look_008 scored 0.00 despite being 43-136% above baseline. Clean authentication with moderate baseline deviation should trigger at least review. Current 0.25 threshold misses subtle fraud that relies on appearing routine. Lowering to 0.20 ensures baseline anomalies get human review even when velocity and auth are clean.]
