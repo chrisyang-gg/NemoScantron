@@ -1,4 +1,5 @@
 import { bandFor, type GaugeBand } from "@/lib/gauge";
+import { ruleFamily, type RuleFamily } from "@/lib/history/rules";
 import type { NemotronAnalysis } from "@/lib/nemotron/types";
 
 export const HISTORY_STORAGE_KEY = "nemoscantron.history.v1";
@@ -186,6 +187,39 @@ export function latestBatch(events: HistoryEvent[]): HistoryEvent[] {
     if (event.recordedAt > latest) latest = event.recordedAt;
   }
   return events.filter((event) => event.recordedAt === latest);
+}
+
+export function isMediumOrHigh(event: HistoryEvent) {
+  const band = bandFor(event.risk_score * 100);
+  return band === "maybe" || band === "unsafe";
+}
+
+export function dollarsAtRisk(events: HistoryEvent[]) {
+  let total = 0;
+  for (const event of events) {
+    if (!isMediumOrHigh(event) || event.amount == null) continue;
+    total += event.amount;
+  }
+  return total;
+}
+
+export function dollarsAtRiskByFamily(events: HistoryEvent[]): Record<RuleFamily, number> {
+  const totals: Record<RuleFamily, number> = {
+    velocity: 0,
+    geo: 0,
+    merchant: 0,
+    attack: 0,
+    threshold: 0,
+    other: 0,
+  };
+  for (const event of events) {
+    if (!isMediumOrHigh(event) || event.amount == null || event.amount <= 0) continue;
+    const families = [...new Set(event.rules_triggered.map(ruleFamily))];
+    const keys = families.length ? families : (["other"] as RuleFamily[]);
+    const share = event.amount / keys.length;
+    for (const family of keys) totals[family] += share;
+  }
+  return totals;
 }
 
 function hasPlace(place: Place) {

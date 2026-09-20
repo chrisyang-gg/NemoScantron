@@ -1,4 +1,4 @@
-import { decisionPastTense, mapTone } from "./labels";
+import { atRiskLabel, decisionPastTense, mapTone } from "./labels";
 
 function assert(condition: unknown, message: string) {
   if (!condition) throw new Error(message);
@@ -11,5 +11,6 @@ assert(decisionPastTense("flag_for_review") === "flagged for review", "flag for 
 assert(mapTone({ decision: "approve", risk_score: 0.1, rules_triggered: [] }) === "normal", "clean is normal");
 assert(mapTone({ decision: "flag_for_review", risk_score: 0.5, rules_triggered: [] }) === "suspicious", "flag is suspicious");
 assert(mapTone({ decision: "decline", risk_score: 0.9, rules_triggered: ["GEO-001"] }) === "malicious", "decline is malicious");
+assert(atRiskLabel(842.5) === "$842.50 at Risk", "at-risk copy");
 
 console.log("labels.test.ts ok");

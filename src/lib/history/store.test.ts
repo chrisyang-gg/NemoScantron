@@ -1,4 +1,4 @@
-import { latestBatch, riskBands, ruleCounts, scoresByTimestamp, type HistoryEvent } from "./store";
+import { dollarsAtRisk, dollarsAtRiskByFamily, latestBatch, riskBands, ruleCounts, scoresByTimestamp, type HistoryEvent } from "./store";
 
 function assert(condition: unknown, message: string) {
   if (!condition) throw new Error(message);
@@ -48,4 +48,7 @@ assert(riskBands(events).unsafe === 1 && riskBands(events).safe === 1, "bands");
 const series = scoresByTimestamp(events);
 assert(series.length === 1 && Math.abs(series[0].score - 0.9) < 0.001, "timestamp sum");
 assert(latestBatch(events).map((event) => event.transaction_id).join() === "b", "latest file only");
+assert(Math.abs(dollarsAtRisk(events) - 1.13) < 0.001, "only medium/high amounts");
+const split = dollarsAtRiskByFamily(events);
+assert(Math.abs(split.velocity - 0.565) < 0.001 && Math.abs(split.merchant - 0.565) < 0.001, "split across families");
 console.log("history store tests passed");

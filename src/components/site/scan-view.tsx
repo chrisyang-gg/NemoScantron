@@ -8,8 +8,10 @@ import { Fraudometer } from "@/components/site/fraudometer";
 import { RecommendationPanel } from "@/components/site/recommendation-panel";
 import { TransactionMap } from "@/components/site/transaction-map";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { atRiskLabel } from "@/lib/history/labels";
 import {
   appendScoredEvents,
+  dollarsAtRisk,
   getHistorySnapshot,
   getServerHistorySnapshot,
   latestBatch,
@@ -42,6 +44,7 @@ export function ScanView() {
   );
 
   const analysis = analyses[0] ? worstAnalysis(analyses) : null;
+  const fileAtRisk = analyses.length ? dollarsAtRisk(latestBatch(history)) : 0;
 
   async function submit(notes: string) {
     setText(notes);
@@ -88,8 +91,8 @@ export function ScanView() {
     <div className="relative mx-auto flex w-full max-w-6xl flex-col px-4 py-6 md:px-6">
       <div className="grid items-stretch gap-5 md:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
         <div className="flex flex-col items-center justify-center rounded-2xl border border-violet-500/15 bg-[#140c22]/40 px-2 pt-3">
-          <p className="mb-1 text-[11px] tracking-[0.35em] text-violet-300/60 uppercase">
-            Fraudometer
+          <p className="mb-1 px-3 text-center text-[13px] font-semibold tracking-[0.04em] text-violet-50">
+            {atRiskLabel(fileAtRisk)}
           </p>
           <Fraudometer score={score} ignition={ignition} />
         </div>

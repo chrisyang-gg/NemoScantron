@@ -27,3 +27,16 @@ export function mapTone(event: {
   }
   return "normal";
 }
+
+export function formatMoney(amount: number) {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(amount);
+}
+
+export function atRiskLabel(amount: number) {
+  return `${formatMoney(amount)} at Risk`;
+}
