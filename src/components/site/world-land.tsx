@@ -1,139 +1,33 @@
 import { projectLatLon } from "@/lib/history/geo";
+import worldCountries from "@/data/world-countries.json";
 
-function land(points: [number, number][]) {
-  return (
-    points
-      .map(([lat, lon], index) => {
-        const { x, y } = projectLatLon(lat, lon);
-        return `${index === 0 ? "M" : "L"} ${x.toFixed(1)} ${y.toFixed(1)}`;
-      })
-      .join(" ") + " Z"
-  );
-}
+type LonLat = [number, number];
+type Ring = LonLat[];
+type Polygon = Ring[];
+type CountryFeature = {
+  id?: string;
+  properties: { name: string };
+  geometry:
+    | { type: "Polygon"; coordinates: Polygon }
+    | { type: "MultiPolygon"; coordinates: Polygon[] };
+};
 
-const CONTINENTS: [number, number][][] = [
-  // North America
-  [
-    [71, -162],
-    [68, -130],
-    [60, -136],
-    [55, -130],
-    [48, -125],
-    [32, -117],
-    [23, -110],
-    [26, -97],
-    [29, -90],
-    [25, -81],
-    [31, -81],
-    [45, -67],
-    [47, -53],
-    [53, -56],
-    [60, -64],
-    [70, -80],
-    [73, -95],
-    [70, -140],
-    [71, -162],
-  ],
-  // South America
-  [
-    [12, -72],
-    [10, -62],
-    [5, -51],
-    [-6, -35],
-    [-23, -42],
-    [-34, -53],
-    [-55, -68],
-    [-45, -74],
-    [-18, -71],
-    [0, -80],
-    [8, -79],
-    [12, -72],
-  ],
-  // Europe
-  [
-    [71, 25],
-    [70, 8],
-    [58, 5],
-    [51, -10],
-    [43, -9],
-    [36, -6],
-    [38, 15],
-    [41, 29],
-    [46, 35],
-    [60, 30],
-    [71, 25],
-  ],
-  // Africa
-  [
-    [37, -6],
-    [37, 10],
-    [32, 32],
-    [12, 51],
-    [-5, 40],
-    [-35, 28],
-    [-34, 18],
-    [-18, 12],
-    [5, 8],
-    [5, -8],
-    [15, -17],
-    [32, -10],
-    [37, -6],
-  ],
-  // Asia
-  [
-    [73, 60],
-    [66, 40],
-    [55, 36],
-    [42, 27],
-    [36, 36],
-    [28, 48],
-    [25, 56],
-    [22, 59],
-    [8, 77],
-    [8, 98],
-    [20, 110],
-    [22, 122],
-    [40, 128],
-    [53, 142],
-    [66, 180],
-    [72, 140],
-    [75, 100],
-    [73, 60],
-  ],
-  // Australia
-  [
-    [-11, 142],
-    [-12, 130],
-    [-22, 114],
-    [-35, 115],
-    [-39, 140],
-    [-28, 153],
-    [-11, 142],
-  ],
-  // UK
-  [
-    [59, -6],
-    [50, -5],
-    [51, 1.5],
-    [58, -2],
-    [59, -6],
-  ],
-  // Japan
-  [
-    [45, 141],
-    [35, 139],
-    [31, 131],
-    [34, 133],
-    [43, 145],
-    [45, 141],
-  ],
-];
+const COUNTRY_PATHS = (worldCountries.features as unknown as CountryFeature[]).map((feature, index) => ({
+  key: `${feature.id ?? feature.properties.name}-${index}`,
+  d: geometryPath(feature.geometry),
+}));
 
 export function WorldLand() {
   return (
-    <g fill="rgba(139,92,246,0.24)" stroke="rgba(196,181,253,0.35)" strokeWidth="1.1">
-      {CONTINENTS.map((points, index) => (
-        <path key={index} d={land(points)} />
+    <g
+      fill="rgba(139,92,246,0.26)"
+      fillRule="evenodd"
+      stroke="rgba(196,181,253,0.42)"
+      strokeWidth="0.65"
+      strokeLinejoin="round"
+    >
+      {COUNTRY_PATHS.map((country) => (
+        <path key={country.key} d={country.d} />
       ))}
     </g>
   );
@@ -158,4 +52,22 @@ export function WorldGraticule() {
       {parallels}
     </g>
   );
+}
+
+function geometryPath(geometry: CountryFeature["geometry"]) {
+  const polygons = geometry.type === "Polygon" ? [geometry.coordinates] : geometry.coordinates;
+  return polygons.flatMap((polygon) => polygon.map(ringPath)).join(" ");
+}
+
+function ringPath(ring: Ring) {
+  const parts: string[] = [];
+  let previousLon: number | null = null;
+  for (const [lon, lat] of ring) {
+    const { x, y } = projectLatLon(lat, lon);
+    const command = previousLon != null && Math.abs(lon - previousLon) > 180 ? "M" : parts.length ? "L" : "M";
+    parts.push(`${command} ${x.toFixed(1)} ${y.toFixed(1)}`);
+    previousLon = lon;
+  }
+  if (parts.length) parts.push("Z");
+  return parts.join(" ");
 }
