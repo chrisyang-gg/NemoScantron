@@ -9,6 +9,7 @@
     "lint": "eslint",
     "test:parse": "npx --yes tsx src/lib/nemotron/parse.test.ts",
     "test:red-team": "npx --yes tsx src/lib/red-team/categories.test.ts",
+    "test:history": "npx --yes tsx src/lib/history/store.test.ts",
     "train-trends": "node scripts/train-trends.mjs",
     "red-team": "npx --yes tsx scripts/red-team.ts",
     "train-ruleset": "npx --yes tsx scripts/red-team.ts"

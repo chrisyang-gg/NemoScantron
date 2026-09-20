@@ -68,7 +68,7 @@ export function Fraudometer({
     <div className="flex flex-col items-center">
       <svg
         viewBox="0 0 320 220"
-        className="w-full max-w-[420px]"
+        className="w-full max-w-[340px]"
         role="img"
         aria-label={`Fraud risk ${target} percent, ${labelFor(target)}`}
       >

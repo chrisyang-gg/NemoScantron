@@ -6,7 +6,7 @@ import Link from "next/link";
 export function SiteHeader() {
   return (
     <header className="relative z-40">
-      <div className="mx-auto flex h-48 w-full max-w-3xl items-center justify-between px-4 md:px-6">
+      <div className="mx-auto flex h-48 w-full max-w-6xl items-center justify-between px-4 md:px-6">
         <Link href="/" className="flex items-center gap-3">
           <span className="text-sm font-semibold tracking-[0.22em] text-violet-100 uppercase">
             NemoScantron

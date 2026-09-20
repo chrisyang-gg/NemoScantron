@@ -25,6 +25,12 @@ FILE 8 JSON → website
 
 A file may be submitted without notes. Notes cannot be submitted without a file.
 
+After a score, the fraudometer sits to the left of the Nemotron decision
+card. Clear is on the card. Tabs under that row switch Modify Input,
+Recommendation, Transaction Map, and Enterprise Dashboard. The dashboard
+keeps a slim local history of prior scores (rules, risk, timestamp,
+amount) — not the full JSON.
+
 ## Run it locally
 
 ```bash

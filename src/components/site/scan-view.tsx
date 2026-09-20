@@ -1,18 +1,29 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useSyncExternalStore } from "react";
 import { AnalysisCard } from "@/components/site/analysis-card";
 import { Composer } from "@/components/site/composer";
+import { EnterpriseDashboard } from "@/components/site/dashboard/enterprise-dashboard";
 import { Fraudometer } from "@/components/site/fraudometer";
+import { RecommendationPanel } from "@/components/site/recommendation-panel";
+import { TransactionMap } from "@/components/site/transaction-map";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  appendScoredEvents,
+  getHistorySnapshot,
+  getServerHistorySnapshot,
+  saveHistory,
+  subscribeHistory,
+} from "@/lib/history/store";
 import { analyzeSubmission, worstAnalysis } from "@/lib/nemotron/client-run";
+import { prepareRecords } from "@/lib/nemotron/intake";
 import type { NemotronAnalysis } from "@/lib/nemotron/types";
 import { unlockSubmissions, type AttachedJson } from "@/lib/pipeline/client-scan";
-import { cn } from "@/lib/utils";
 
-type Phase = "compose" | "locked" | "editing";
+type WorkspaceTab = "modify" | "recommendation" | "map" | "dashboard";
 
 export function ScanView() {
-  const [phase, setPhase] = useState<Phase>("compose");
+  const [tab, setTab] = useState<WorkspaceTab>("modify");
   const [notesKey, setNotesKey] = useState(0);
   const [text, setText] = useState("");
   const [file, setFile] = useState<AttachedJson | null>(null);
@@ -20,12 +31,16 @@ export function ScanView() {
   const [busy, setBusy] = useState(false);
   const [score, setScore] = useState(0);
   const [ignition, setIgnition] = useState(0);
-  const [analysis, setAnalysis] = useState<NemotronAnalysis | null>(null);
+  const [analyses, setAnalyses] = useState<NemotronAnalysis[]>([]);
   const [engine, setEngine] = useState("nvidia-nemotron");
   const [droppedNote, setDroppedNote] = useState<string | null>(null);
+  const history = useSyncExternalStore(
+    subscribeHistory,
+    getHistorySnapshot,
+    getServerHistorySnapshot,
+  );
 
-  const gaugeVisible = phase !== "compose";
-  const locked = phase === "locked";
+  const analysis = analyses[0] ? worstAnalysis(analyses) : null;
 
   async function submit(notes: string) {
     setText(notes);
@@ -37,9 +52,13 @@ export function ScanView() {
       setError(result.error);
       return;
     }
+    const intake = prepareRecords({ notes, file });
+    const nextHistory =
+      intake.ok ? appendScoredEvents(intake.records, result.analyses, history) : history;
+    if (intake.ok) saveHistory(nextHistory);
     const primary = worstAnalysis(result.analyses);
     setBusy(false);
-    setAnalysis(primary);
+    setAnalyses(result.analyses);
     setEngine(result.engine);
     setScore(Math.round(primary.risk_score * 100));
     setDroppedNote(
@@ -50,7 +69,6 @@ export function ScanView() {
         : null,
     );
     setIgnition((value) => value + 1);
-    setPhase("locked");
   }
 
   function clearAll() {
@@ -59,88 +77,95 @@ export function ScanView() {
     setFile(null);
     setError(null);
     setScore(0);
-    setAnalysis(null);
+    setAnalyses([]);
     setDroppedNote(null);
     setNotesKey((value) => value + 1);
-    setPhase("compose");
-  }
-
-  function modify() {
-    unlockSubmissions();
-    setError(null);
-    setPhase("editing");
+    setTab("modify");
   }
 
   return (
-    <div className="relative mx-auto flex min-h-[calc(100dvh-3.5rem)] w-full max-w-3xl flex-col px-4 py-6 md:px-6">
-      <div
-        className={cn(
-          "pointer-events-none flex flex-col items-center overflow-hidden transition-all duration-700 ease-in-out",
-          gaugeVisible
-            ? "mb-3 max-h-[360px] flex-none opacity-100"
-            : "mb-0 max-h-0 flex-none opacity-0",
-        )}
-        aria-hidden={!gaugeVisible}
-        inert={!gaugeVisible ? true : undefined}
-      >
-        <p className="mb-1 text-[11px] tracking-[0.35em] text-violet-300/60 uppercase">
-          Fraudometer
-        </p>
-        <Fraudometer score={score} ignition={ignition} />
-      </div>
-
-      {analysis && gaugeVisible ? (
-        <div className="mx-auto mb-4 flex w-full justify-center">
-          <AnalysisCard
-            analysis={analysis}
-            engine={engine}
-            extra={droppedNote}
-          />
+    <div className="relative mx-auto flex w-full max-w-6xl flex-col px-4 py-6 md:px-6">
+      <div className="grid items-stretch gap-5 md:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
+        <div className="flex flex-col items-center justify-center rounded-2xl border border-violet-500/15 bg-[#140c22]/40 px-2 pt-3">
+          <p className="mb-1 text-[11px] tracking-[0.35em] text-violet-300/60 uppercase">
+            Fraudometer
+          </p>
+          <Fraudometer score={score} ignition={ignition} />
         </div>
-      ) : null}
-
-      <div
-        className={cn(
-          "mx-auto flex w-full max-w-[640px] flex-col gap-3 transition-all duration-700 ease-in-out",
-          phase === "compose" && "my-auto",
-          phase === "locked" && "mt-auto mb-4",
-          phase === "editing" && "mt-2 mb-8",
-        )}
-      >
-        {phase !== "compose" ? (
-          <div className="grid grid-cols-2 gap-3">
-            <button
-              type="button"
-              onClick={clearAll}
-              className="h-11 rounded-xl bg-[#6e4a4a] text-sm font-medium text-[#f0d6d4] transition hover:bg-[#7d5555]"
-            >
-              Clear
-            </button>
-            <button
-              type="button"
-              onClick={modify}
-              className="h-11 rounded-xl bg-[#4a5c68] text-sm font-medium text-[#d8e2e8] transition hover:bg-[#556875]"
-            >
-              Modify
-            </button>
-          </div>
-        ) : null}
-
-        <Composer
-          key={notesKey}
-          initialText={text}
-          file={file}
-          locked={locked}
-          busy={busy}
-          error={error}
-          onFile={(next) => {
-            setFile(next);
-            setError(null);
-          }}
-          onReject={setError}
-          onSubmit={submit}
+        <AnalysisCard
+          analysis={analysis}
+          engine={engine}
+          extra={droppedNote}
+          onClear={clearAll}
         />
       </div>
+
+      <Tabs
+        value={tab}
+        onValueChange={(value) => {
+          if (value === "modify" || value === "recommendation" || value === "map" || value === "dashboard") {
+            setTab(value);
+          }
+        }}
+        className="mt-8 gap-0"
+      >
+        <TabsList
+          variant="line"
+          className="h-auto w-full flex-wrap justify-start gap-6 rounded-none bg-transparent p-0"
+        >
+          <TabsTrigger
+            value="modify"
+            className="h-auto flex-none px-0 pb-3 text-[13px] tracking-[0.16em] text-violet-300/55 uppercase data-active:text-violet-50"
+          >
+            Modify Input
+          </TabsTrigger>
+          <TabsTrigger
+            value="recommendation"
+            className="h-auto flex-none px-0 pb-3 text-[13px] tracking-[0.16em] text-violet-300/55 uppercase data-active:text-violet-50"
+          >
+            Recommendation
+          </TabsTrigger>
+          <TabsTrigger
+            value="map"
+            className="h-auto flex-none px-0 pb-3 text-[13px] tracking-[0.16em] text-violet-300/55 uppercase data-active:text-violet-50"
+          >
+            Transaction Map
+          </TabsTrigger>
+          <TabsTrigger
+            value="dashboard"
+            className="h-auto flex-none px-0 pb-3 text-[13px] tracking-[0.16em] text-violet-300/55 uppercase data-active:text-violet-50"
+          >
+            Enterprise Dashboard
+          </TabsTrigger>
+        </TabsList>
+        <div className="mb-6 h-px w-full bg-violet-400/20" />
+
+        <TabsContent value="modify" className="mx-auto w-full max-w-[640px] pb-10">
+          <Composer
+            key={notesKey}
+            initialText={text}
+            file={file}
+            locked={busy}
+            busy={busy}
+            error={error}
+            onFile={(next) => {
+              setFile(next);
+              setError(null);
+            }}
+            onReject={setError}
+            onSubmit={submit}
+          />
+        </TabsContent>
+        <TabsContent value="recommendation" className="pb-10">
+          <RecommendationPanel analyses={analyses} />
+        </TabsContent>
+        <TabsContent value="map" className="pb-10">
+          <TransactionMap events={history} />
+        </TabsContent>
+        <TabsContent value="dashboard" className="pb-10">
+          <EnterpriseDashboard events={history} />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
