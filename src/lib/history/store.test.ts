@@ -1,4 +1,4 @@
-import { riskBands, ruleCounts, scoresByTimestamp, type HistoryEvent } from "./store";
+import { latestBatch, riskBands, ruleCounts, scoresByTimestamp, type HistoryEvent } from "./store";
 
 function assert(condition: unknown, message: string) {
   if (!condition) throw new Error(message);
@@ -47,4 +47,5 @@ assert(ruleCounts(events)["VB-001"] === 1, "rule count");
 assert(riskBands(events).unsafe === 1 && riskBands(events).safe === 1, "bands");
 const series = scoresByTimestamp(events);
 assert(series.length === 1 && Math.abs(series[0].score - 0.9) < 0.001, "timestamp sum");
+assert(latestBatch(events).map((event) => event.transaction_id).join() === "b", "latest file only");
 console.log("history store tests passed");

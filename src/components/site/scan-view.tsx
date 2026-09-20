@@ -12,6 +12,7 @@ import {
   appendScoredEvents,
   getHistorySnapshot,
   getServerHistorySnapshot,
+  latestBatch,
   saveHistory,
   subscribeHistory,
 } from "@/lib/history/store";
@@ -160,7 +161,7 @@ export function ScanView() {
           <RecommendationPanel analyses={analyses} />
         </TabsContent>
         <TabsContent value="map" className="pb-10">
-          <TransactionMap events={history} />
+          <TransactionMap events={latestBatch(history)} />
         </TabsContent>
         <TabsContent value="dashboard" className="pb-10">
           <EnterpriseDashboard events={history} />

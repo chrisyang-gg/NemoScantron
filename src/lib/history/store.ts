@@ -123,15 +123,16 @@ export function eventFrom(
     latitude: numberOrNull(location.latitude),
     longitude: numberOrNull(location.longitude),
   };
-  const origin =
-    previousDest && (previousDest.country || previousDest.city || previousDest.latitude != null)
-      ? previousDest
-      : {
-          city: null,
-          country: stringOrNull(account.billing_country ?? location.ip_country),
-          latitude: null,
-          longitude: null,
-        };
+  const home: Place = {
+    city: null,
+    country: stringOrNull(account.billing_country ?? location.ip_country),
+    latitude: null,
+    longitude: null,
+  };
+  if (!hasPlace(dest) && hasPlace(home)) {
+    dest.country = home.country;
+  }
+  const origin = travelOrigin(previousDest, home, dest);
   return {
     recordedAt,
     timestamp: String(record?.timestamp ?? analysis.analysis_timestamp),
@@ -176,6 +177,35 @@ export function scoresByTimestamp(events: HistoryEvent[]): { timestamp: string; 
   return [...sums.entries()]
     .map(([timestamp, score]) => ({ timestamp, score }))
     .sort((a, b) => Date.parse(a.timestamp) - Date.parse(b.timestamp) || a.timestamp.localeCompare(b.timestamp));
+}
+
+export function latestBatch(events: HistoryEvent[]): HistoryEvent[] {
+  if (!events.length) return [];
+  let latest = events[0].recordedAt;
+  for (const event of events) {
+    if (event.recordedAt > latest) latest = event.recordedAt;
+  }
+  return events.filter((event) => event.recordedAt === latest);
+}
+
+function hasPlace(place: Place) {
+  return Boolean(place.city || place.country || place.latitude != null);
+}
+
+function sameCountry(left: Place, right: Place) {
+  const a = left.country?.trim().toUpperCase();
+  const b = right.country?.trim().toUpperCase();
+  return Boolean(a && b && a === b);
+}
+
+function travelOrigin(previous: Place | null | undefined, home: Place, dest: Place): Place {
+  if (previous && hasPlace(previous) && !sameCountry(previous, dest)) return previous;
+  if (previous && hasPlace(previous) && (previous.city || dest.city) && previous.city !== dest.city) {
+    return previous;
+  }
+  if (hasPlace(home) && !sameCountry(home, dest)) return home;
+  if (hasPlace(dest)) return dest;
+  return home;
 }
 
 function isEvent(value: unknown): value is HistoryEvent {
