@@ -17,6 +17,10 @@ export type HistoryEvent = {
   country: string | null;
   latitude: number | null;
   longitude: number | null;
+  origin_city: string | null;
+  origin_country: string | null;
+  origin_latitude: number | null;
+  origin_longitude: number | null;
 };
 
 export function loadHistory(): HistoryEvent[] {
@@ -67,17 +71,39 @@ export function subscribeHistory(onStoreChange: () => void) {
   };
 }
 
+type Place = {
+  city: string | null;
+  country: string | null;
+  latitude: number | null;
+  longitude: number | null;
+};
+
 export function appendScoredEvents(
   records: Record<string, unknown>[],
   analyses: NemotronAnalysis[],
   existing: HistoryEvent[],
 ): HistoryEvent[] {
   const byId = new Map(records.map((record) => [String(record.transaction_id ?? ""), record]));
+  const pairs = analyses
+    .map((analysis) => ({ analysis, record: byId.get(analysis.transaction_id) }))
+    .sort((a, b) => {
+      const left = String(a.record?.timestamp ?? a.analysis.analysis_timestamp);
+      const right = String(b.record?.timestamp ?? b.analysis.analysis_timestamp);
+      return Date.parse(left) - Date.parse(right) || left.localeCompare(right);
+    });
+
   const next = [...existing];
   const stamp = new Date().toISOString();
-  for (const analysis of analyses) {
-    const record = byId.get(analysis.transaction_id);
-    next.push(eventFrom(analysis, record, stamp));
+  let previous: Place | null = null;
+  for (const pair of pairs) {
+    const event = eventFrom(pair.analysis, pair.record, stamp, previous);
+    next.push(event);
+    previous = {
+      city: event.city,
+      country: event.country,
+      latitude: event.latitude,
+      longitude: event.longitude,
+    };
   }
   return next.slice(-MAX_EVENTS);
 }
@@ -86,9 +112,26 @@ export function eventFrom(
   analysis: NemotronAnalysis,
   record: Record<string, unknown> | undefined,
   recordedAt: string,
+  previousDest?: Place | null,
 ): HistoryEvent {
   const merchant = asRecord(record?.merchant);
   const location = asRecord(record?.location);
+  const account = asRecord(record?.account);
+  const dest = {
+    city: stringOrNull(location.transaction_city ?? merchant.merchant_city),
+    country: stringOrNull(location.transaction_country ?? merchant.merchant_country),
+    latitude: numberOrNull(location.latitude),
+    longitude: numberOrNull(location.longitude),
+  };
+  const origin =
+    previousDest && (previousDest.country || previousDest.city || previousDest.latitude != null)
+      ? previousDest
+      : {
+          city: null,
+          country: stringOrNull(account.billing_country ?? location.ip_country),
+          latitude: null,
+          longitude: null,
+        };
   return {
     recordedAt,
     timestamp: String(record?.timestamp ?? analysis.analysis_timestamp),
@@ -98,10 +141,11 @@ export function eventFrom(
     merchant_risk_score: numberOrNull(merchant.merchant_risk_score),
     rules_triggered: analysis.rules_triggered,
     amount: numberOrNull(record?.amount),
-    city: stringOrNull(location.transaction_city ?? merchant.merchant_city),
-    country: stringOrNull(location.transaction_country ?? merchant.merchant_country),
-    latitude: numberOrNull(location.latitude),
-    longitude: numberOrNull(location.longitude),
+    ...dest,
+    origin_city: origin?.city ?? null,
+    origin_country: origin?.country ?? null,
+    origin_latitude: origin?.latitude ?? null,
+    origin_longitude: origin?.longitude ?? null,
   };
 }
 

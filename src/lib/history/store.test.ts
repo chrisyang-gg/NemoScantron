@@ -18,6 +18,10 @@ const events: HistoryEvent[] = [
     country: "US",
     latitude: null,
     longitude: null,
+    origin_city: null,
+    origin_country: "US",
+    origin_latitude: null,
+    origin_longitude: null,
   },
   {
     recordedAt: "2026-09-19T20:00:01Z",
@@ -32,6 +36,10 @@ const events: HistoryEvent[] = [
     country: "US",
     latitude: null,
     longitude: null,
+    origin_city: "Pittsburgh",
+    origin_country: "US",
+    origin_latitude: null,
+    origin_longitude: null,
   },
 ];
 

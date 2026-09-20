@@ -29,7 +29,8 @@ After a score, the fraudometer sits to the left of the Nemotron decision
 card. Clear is on the card. Tabs under that row switch Modify Input,
 Recommendation, Transaction Map, and Enterprise Dashboard. The dashboard
 keeps a slim local history of prior scores (rules, risk, timestamp,
-amount) — not the full JSON.
+amount) — not the full JSON. The map draws arrows from origin (billing
+home or the previous charge) to each transaction destination.
 
 ## Run it locally
 
