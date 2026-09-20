@@ -1,3 +1,4 @@
+import { decisionPastTense } from "@/lib/history/labels";
 import type { HistoryEvent } from "@/lib/history/store";
 
 const COLUMNS = [
@@ -14,7 +15,7 @@ export function EventLog({ events }: { events: HistoryEvent[] }) {
   const rows = events.slice(-10).reverse();
 
   return (
-    <div className="overflow-x-auto rounded-xl border border-violet-500/15">
+    <div className="violet-scroll overflow-x-auto rounded-xl border border-violet-500/15">
       <table className="min-w-[880px] w-full border-collapse text-left text-xs">
         <thead>
           <tr className="bg-[#1a1228] text-[11px] tracking-[0.14em] text-violet-300/70 uppercase">
@@ -34,7 +35,7 @@ export function EventLog({ events }: { events: HistoryEvent[] }) {
               >
                 <td className="px-3 py-2 whitespace-nowrap text-violet-100/90">{event.timestamp}</td>
                 <td className="px-3 py-2 whitespace-nowrap">{event.risk_score.toFixed(3)}</td>
-                <td className="px-3 py-2 whitespace-nowrap">{event.decision.replaceAll("_", " ")}</td>
+                <td className="px-3 py-2 whitespace-nowrap">{decisionPastTense(event.decision)}</td>
                 <td className="px-3 py-2 whitespace-nowrap">{event.transaction_id}</td>
                 <td className="px-3 py-2 whitespace-nowrap">
                   {event.merchant_risk_score == null ? "—" : event.merchant_risk_score.toFixed(3)}
